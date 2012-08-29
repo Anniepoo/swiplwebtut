@@ -1,6 +1,6 @@
 body {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
-	background-color: #CCC;
+	background-color: #EEEEFF;
 	line-height: 130%;
 }
 
@@ -9,6 +9,11 @@ body {
 	line-height: 18pt;
 	font-variant: small-caps;
 	text-decoration: none;
+    color: #CC0000;
+}
+
+.contents a:hover {
+    text-decoration: underline;
 }
 
 em {
@@ -18,4 +23,53 @@ em {
 
 code {
     white-space: pre-wrap;
+}
+
+pre {
+    margin: 0;
+}
+
+.precode {
+    background-color: #dddddd;
+    margin-left: 24px;
+    padding: 4px;
+}
+
+.precode.exercise {
+    background-color: #eeeeee;
+    border: solid 1px black;
+}
+
+.precode.exercise  code{
+   font-height: 120%;
+}
+
+.warning {
+    color: #ff4400;
+}
+
+h1,h2,h3,h4 {
+    color: #FFFFFF;
+    background-color: #888888;
+}
+
+h1 {
+    background-color: #FF0000;
+    padding: 14px;
+}
+
+h2 {
+    background-color: #FF4444;
+    padding: 14px;
+}
+
+h3 {
+    background-color: #FF8888;
+    padding: 8px;
+}
+
+h4 {
+    background-color: #FFCCCC;
+    color: #444444;
+    padding: 6px;
 }

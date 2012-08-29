@@ -31,11 +31,7 @@ say_hi(_Request) :-
         format('Content-type: text/html~n~n'),
 	print_html(TokenizedHtml).
 
-% this is an error
-%
-% because head is apparently reserved, or something.
-%
 my_nonterm -->
-	html([html(head([title('Howdy')]),
+	html([html([head([title('Howdy')]),
 	           body([h1('A Simple Web Page'),
-		      p('With some text')]))]).
+		      p('With some text')])])]).
