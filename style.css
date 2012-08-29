@@ -1,0 +1,21 @@
+body {
+	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+	background-color: #CCC;
+	line-height: 130%;
+}
+
+.contents a {
+	display: block;
+	line-height: 18pt;
+	font-variant: small-caps;
+	text-decoration: none;
+}
+
+em {
+	font-weight: bold;	
+	font-style: normal;
+}
+
+code {
+    white-space: pre-wrap;
+}

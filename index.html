@@ -1,0 +1,778 @@
+<html>
+<head>
+<link href="style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<h1>Creating Web Applications in SWI-Prolog</h1>
+<p class='contents'>
+<a href='#intro'>Introduction</a>
+<a href='#1'>1 Setting Up Handlers</a>
+<a href='#2'>2 Generating HTML</a>
+<a href='#3'>3 Handling Parameters</a>
+<a href='#4'>4 Sessions</a>
+<a href='#5'>5 Dispatching Revisited</a>
+<a href='#6'>6 Handlers Revisited</a>
+<a href='#7'>7 Including Resources</a>
+<a href='#8'>8 Authentication</a>
+<a href='#9'>9 Running The Server</a>
+<a href='#10'>10 Handling The Back End</a>
+<a href='#11'>11 Debugging and Development Support</a>
+<a href='#12'>12 Security</a></p>
+<h2>Introduction</h2>
+<a id='intro' />
+<h3>Who This Course Is For</h3>
+<p>This course is for anyone who knows swi-Prolog reasonably well and wants to learn the web application framework bundled with swi-Prolog.</p>
+<p>Many programmers assume Prolog needs to be hosted with a 'normal' language. I'm not sure why. Certainly xpce wouldn't be suitable for many desktop gui systems. But those are becoming rare. Even the desktop systems I've written recently have been written as web servers that display the UI in the browser. This course is part of my response to this mentality.</p>
+<h3>Why Prolog?</h3>
+<p>Prolog is of course more associated with expert systems and torturing undergraduates than with production web applications. But I've found it an excellent system for building web applications as well.</p>
+<p>Prolog programs are simply <em>smaller</em>. Prolog programs are often <em>one tenth</em> the size of equivilent Java programs. And smallness is a virtuous cycle. Smallness encourages well written code, and well written code is easier to maintain and refactor and remains small.</p>
+<p>What makes Prolog systems small? Complex question, but we can identify various factors. With backtracking instead of control structures, Prolog eliminates the 90% of loops that are actually iterators. Backtracking often eliminates error handling. Partial binding and incomplete structures eliminate much data reformatting. And in general, there's just a lot more case based reasoning, which means a lot less ceremony associated with handling of edge conditions. And of course you can put a small reasoner in to figure out complex business logic like 'who'se allowed to edit this?'</p>
+<p>The swipl web app framework is very friendly. You can edit running code and query make. (C-c C-m in the IDE editor) and keep going without disturbing state, and you can use the graphic debugger.</p>
+<h3>Getting The Most From This Course</h3>
+<p>This course is this web page and a series of example programs. </p>
+<p>This course is simply a series of example programs. They're designed to take reasonable sized bites at a subject, then return later to the subject. This revisiting of material in more depth improves retention, we hope, while avoiding the deadly boring 'review'.</p>
+<p>The example programs are <em>not</em> reproduced here. I want you to actually <em>look at</em> and <em>fiddle with</em> the code. So hopefully you'll be encouraged if you have to read it locally. You can get the examples <a href="swiplhtmltutorial.zip">here</a></p>
+<p>To get the most from this course, you'll need to</p>
+<ul>
+<li>Have a working <a href="http://www.swi-prolog.org">swi-Prolog</a> install </li>
+<li>Get the example files from <a href="swiplhtmltutorial.zip">here</a></li>
+<li>Understand Prolog and SWI-Prolog's dialect before trying to build web apps</li>
+<li>Read the text</li>
+<li>Try each example program. Especially, look at the source of the resulting page. Experiment!</li>
+<li>Do the exercises</li>
+</ul>
+<p>The example programs are labelled with the chapter and section number, so webserver1_2.pl is the code for chapter one section 2.</p>
+<p>Different people will have different backgrounds and learning styles. Whatever works for you works.</p>
+<h3>Getting Stuck</h3>
+<p>If you have questions and reasonable effort doesn't answer them, drop me email at aogborn (somechar) uh.edu. Please, if you're taking a beginning Prolog course, ask your instructor. Questions about family trees will be ignored. But if you're working on a web app, feel free.</p>
+<p>Asking on ##Prolog on freenode.net is also a good way to get answers.</p>
+<p>Finally, I well could be wrong. This material's not that well documented in spots, and I'm making these tutorials partly to teach myself. While the web app <em>feels</em> nice to handle, in practice I've had a frustrating number of wtf moments. I'm hoping this tutorial will help change that.</p>
+<h4>Giving Back</h4>
+<p>I was going to make some 'create a blog' fake project for the course, but realized that was a waste of good programming talent. Instead of having a useless project, I thought I'd invite  everyone who takes it contribute a piece to an opensource library. It's not a requirement, if you have a specific project of your own, feel free to do that. But if you're taking this course and want an under-a-day little project to cement your knowledge, maybe this is the thing for you.</p>
+<p>I don't like big, monolithic libraries. It's frustrating to discover you have to accept a big memory hit and a bunch of painful setup to get one cool little bit. So I'm making a set of small, mostly independent tools.</p>
+<p>I'm calling it <em>Weblog</em> a library that makes common web interaction patterns easier.</p>
+<p>If you're up for it, head over to <a href="http://www.welie.com/patterns/index.php">Welie.com</a> and find yourself a pattern you like. It shouldn't be on the list below (those are done). </p>
+<p>(This is the list - it's empty now).</p>
+<h2>1 Setting Up Handlers</h2>
+<p><a id='1' /></p>
+<h3>1_1 Hello Web</h3>
+<p>(Like always, I'm assuming you're reading the code in the swipl IDE, so I'm not showing the code here).</p>
+<p>Web apps in swipl can be run in various ways. The one we'll use to start is simply running as our own web server. I'm going to cover the larger issues later, so for now I'll give you a bit of voodoo code to get a basic server up and running</p>
+<p>These lines include modules needed for our basic server</p>
+<pre><code>:- use_module(library(http/thread_httpd)).
+:- use_module(library(http/http_dispatch)).
+</code></pre>
+<p>And this is our main server loop.</p>
+<pre><code>server(Port) :-
+        http_server(http_dispatch, [port(Port)]).
+</code></pre>
+<p>Query <code>server(8000).</code>  to start the server on port 8000 and browse <a href="http://127.0.0.1:8000/">http://127.0.0.1:8000/</a></p>
+<p>Swipl web apps are defined as a collection of <em>handlers</em> . The first topic we'll cover is defining handlers. If you know Ruby on Rails these are like 'routes'.</p>
+<p>We have a single handler that handles the root path /</p>
+<pre><code>:- http_handler(/, say_hi, []).
+</code></pre>
+<p>This declaration says 'handle the root of the tree by querying the goal say_hi.'</p>
+<pre><code>Warning factoid: make. doesn't seem to properly clear old definitions all the time. If you muck with routes you may have to restart.
+</code></pre>
+<p>The first argument, /, is an atom that means 'the root of the URI'. So if we instead wanted our server to serve http://127.0.0.1:8000/twinkly/elf/weenblat.xls we'd say</p>
+<pre><code>:- http_handler('/twinkly/elf/weenblat.xls', say_hi, []).
+</code></pre>
+<p>The second argument will be called with <code>call(Arg, Request)</code>, where Request is the request info. This enables the handy trick of making similar handlers a single block of code with specialization.</p>
+<p>The last argument is a set of options. The most interesting of these is <code>prefix</code>, which lets a single handler handle everything below the route as well. More about handler options in the section on serving asset files.</p>
+<p>Now we're ready for the actual handler rule.</p>
+<p>When the rule is called the current input stream has been redirected to read the HTTPRequest, and current output has been redirected out the socket, so all we need do is print the response. </p>
+<p>We'll first write the required Content-type: header and then the body.</p>
+<pre><code>say_hi(_Request) :-
+        format('Content-type: text/plain~n~n'),
+        format('Hello World!~n').
+</code></pre>
+<p>Don't worry, this is NOT the usual way of writing content. But that's chapter 2!</p>
+<pre><code>Exercise: Add two handlers to 1_1 that print two different hello messages. Add only two handler declarations and a single non declaration rule to the program.
+</code></pre>
+<h3>1_2 Abstract Paths</h3>
+<p>Anyone who'se made a large web app will be worried by the way we've been encoding our HTTP paths. '/fluffybunny' is fine for a small website, but imagine maintaining a large system with all these absolute paths hard coded.</p>
+<p>The solution is what swipl calls 'abstract paths', and the abstract path library <a href="http://www.swi-prolog.org/pldoc/doc/swi/library/http/http_path.pl">swipl docs</a>.</p>
+<p>In 1_2 our handler declarations have changed. They now look like</p>
+<pre><code>:- http_handler(root(.), say_hi, []).
+
+% And, just for clarity, define a second handler
+% this one can by reached at http://127.0.0.1:8000/taco
+:- http_handler(root(taco), say_taco, []).
+</code></pre>
+<p>The first is our old friend, the root handler, which serves http://127.0.0.1:8000/</p>
+<p>Paths are from an abstract base. In our case, the only abstract base is root, which is defined as /. So / is root(.), /taco is root(taco), and <code>root('foo/bar')</code> is /foo/bar (note, not  <code>root(foo(bar))</code>).</p>
+<p>So, you're thinking, other than syntactic change, so what?</p>
+<p>On to</p>
+<h3>1_3 Defining new abstract paths</h3>
+<p>This code adds a hook predicate that defines a new abstract path. With it, we can now say files('zap.gif') to serve /f/zap.gif</p>
+<p>A something to notice (obvious perhaps, but a source of much pain for me) is that the path to the root of <em>files</em> is an absolute path specification, not root(.) </p>
+<pre><code>:- multifile http:location/3.
+:- dynamic   http:location/3.
+
+http:location(files, '/f', []).
+</code></pre>
+<p>Also notice that <code>location</code> is arity 3. It takes a list of options, the only valid option being <code>priority(+:integer)</code> which is used to disambiguate multiple handlers that handle the same URI. This is useful for defining a fallback handler for prefix of / to make a custom 404 page.</p>
+<p>A warning of a confusing point. I was tryig to make these 'abstract paths' be abstract files paths for a long time when learning this stuff. Beware, the two have nothing to do with each other. And to make things worse later on we'll encounter them used together.</p>
+<pre><code>Exercise: Add a handler that says 'sorry, not here' to 1_3 when you try something like http://127.0.0.1:8000/this/is/invalid
+</code></pre>
+<p>A final note. Remember that your server will some day probably be proxied to by apache, so your root path may be changed. This is an excellent reason to use abstract paths. If you have many abstract paths you can redefine http:prefix to change everything at once.</p>
+<h2>2 Generating HTML</h2>
+<p><a id='2' /></p>
+<p>So far we've served plain text. Lets serve HTML.</p>
+<p>This is the largest chapter in the tutorial. It's oriented towards the built in swipl HTML generation support. I know that there are two camps when it comes to HTML generation.</p>
+<p>The 'template' camp wants to edit HTML with normal HTML tools, and will live with awkward php/jsp/asp style <code>&lt;% .... %&gt;</code> escaping for dynamic generation.</p>
+<p>The dynamic camp wants to dynamically generate web pages, and will live with 'funny looking' HTML to do that. </p>
+<p>The built in generation is firmly in the 'dynamic' camp. If you pitch your tent in the template camp, look at <a href="http://www.cs.otago.ac.nz/staffpriv/ok/pwp.pl">PWP</a>. Swipl provides support for <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.21%27,swi%28%27/doc/packages/http.html%27%29%29">integrating PWP</a>.</p>
+<h3>2_1</h3>
+<p>We can serve HTML 
+Obviously we're not going to get very far by hand printing HTML. </p>
+<pre><code>say_hi(_Request) :-
+        format('Content-type: text/html~n~n'),
+        format('&lt;html&gt;&lt;head&gt;&lt;title&gt;Howdy&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h2&gt;A Simple Web Page&lt;/h2&gt;&lt;p&gt;With some text.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;~n').
+</code></pre>
+<p>Ouch!
+Clearly we're not doing this for long. But it's nice to remember in case you have to play strange header games or something that you can indeed get into the loop at this point. Fortunately, you probably won't have to hand print HTML if you do need into that loop. 
+But obviously this isn't where we want to be.</p>
+<h3>2_2  Using print_html</h3>
+<p>This isn't much better, but is an important step in understanding.</p>
+<pre><code>say_hi(_Request) :-
+        format('Content-type: text/html~n~n'),
+    print_html(
+    ['&lt;html&gt;',
+     '&lt;head&gt;',
+     '&lt;title&gt;',
+     'Howdy',
+     '&lt;/title&gt;',
+     '&lt;/head&gt;',
+     '&lt;body&gt;',
+     '&lt;h2&gt;',
+     'A Simple Web Page',
+     '&lt;/h2&gt;',
+     '&lt;p&gt;',
+     'With some text.',
+     '&lt;/p&gt;',
+     '&lt;/body&gt;',
+     '&lt;/html&gt;']).
+</code></pre>
+<p>Swipl has 3 representations for HTML. It can be a single atom, like in 2_1, or a list of tokens, like this, or a term form that we'll show next. Keeping track of which form you're working with can be one of the more confusing bits. So I'm introducing some terminology that Jan doesn't use in the swipl documentation.</p>
+<ul>
+<li><em>HTML atom</em> - an atom or string with HTML in it (the 2_1 representation)</li>
+<li><em>Tokenized HTML</em> - the stuff above</li>
+<li><em>Termerized HTML</em> - The stuff we'll show in 2_3</li>
+</ul>
+<p><code>print_html</code> isn't as simple minded as this example would indicate. If you include elements of the form <code>n(1)</code> in the list, the tokens are output with at least that many newlines at that location. Successive newlines coalesce.
+Additionally, <code>print_html</code> handles the mailman facility (nothing to do with SMTP), which is covered later.</p>
+<pre><code>Exercise: Run 2_2 and look at the generated HTML.  Add some n(1) and n(2) terms and look at the HTML again.
+</code></pre>
+<h3>2_3 html//1 And Termerized HTML</h3>
+<p>A word of warning. If you never really got comfortable with DCG's, stop right now and go get comfy. 
+Welcome back. Nice bunny slippers.</p>
+<p>OK, Annie, get on with it.
+Finally, we see something that looks like reasonable HTML generation.</p>
+<p>Web pages are inherently nested structures that, while they have a structural similarity to their HTML represenation, are not identical. Sounds like a job for a language with good parsing and language transformation skills. Sounds like a job for... Paaa-Roooolloooooooooog.... ::Jan crashes thru the skylight and lands in a heap on the floor, wearing tights and a cape. Annie picks him up and dusts him off::
+At any rate, it's a reasonable thing to do with DCG's, and that's what swipl does, in a sorta sideways way.</p>
+<pre><code>    phrase(
+        html(html(
+        [head(title('Howdy')),
+         body([h1('A Simple Web Page'),
+              p('With some text')])])),
+        TokenizedHtml,
+        []),
+</code></pre>
+<p>This bit of naughtiness uses the library DCG head//1 </p>
+<p>The //1 argument is a DSL to define HTML. phrase will unify in the above when TokenizedHtml is the tokenized HTML equivilent of the html defined by the first arg.</p>
+<p>Most of the rest of this chapter will concentrate on this DSL, which is our 'termerized HTML'.</p>
+<p>Now, in our snippet above, note that <em>this</em> is the prolog</p>
+<pre><code>    phrase(
+        html(...OTHER STUFF...),
+        TokenizedHtml,
+        []),
+</code></pre>
+<p>and <em>this</em> is the termerized HTML OTHER STUFF</p>
+<pre><code>      html(
+        [head(title('Howdy')),
+         body([h1('A Simple Web Page'),
+              p('With some text')])])
+</code></pre>
+<p>Before we get to the format of the termerized HTML, we've got a bit more examination of the Prolog. So on to </p>
+<h3>2_4 And now for broken code</h3>
+<p>A bit of strangeness. I wanted to demonstrate that it's a real DCG by abstracting out the generation into some terms, but oddly the 'head' tag isn't happy.
+I'll freely confess to not understanding this. Stay tuned or drop me a line if you figure it out.</p>
+<pre><code>my_nonterm --&gt;
+    html([html(head([title('Howdy')]),
+               body([h1('A Simple Web Page'),
+              p('With some text')]))]).
+</code></pre>
+<h3>2_5 reply_html_page</h3>
+<p>So, we probably don't want to generate our own head and body tags anyway. We're seeing more ceremony than we really need. swipl provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.</p>
+<pre><code>say_hi(_Request) :-
+    reply_html_page(
+       [title('Howdy')],
+       [h1('A Simple Web Page'),
+        p('With some text')]).
+</code></pre>
+<p>We're down to a single API call that takes some termerized HTML to include in the head and the contents of the body - about what we can minimally supply.</p>
+<p>You're probably thinking 'oh, man, I don't control the head?' - you do, we'll get there. There's a <code>reply_html_page/3</code> that takes a style name as a first arg. This is where most of the head comes from.</p>
+<h3>2_6 Termerized HTML Syntax</h3>
+<p>Finally! 
+The swipl docs for this are in <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.17%27,swi%28%27/doc/packages/http.html%27%29%29">this location</a> which I recommend bookmarking, as finding it is always exciting.</p>
+<p>The html//1 term takes a term or a list as it's sole argument. If a list, each list item must be valid termerized HTML. If a single term, it must be valid termerized HTML.</p>
+<p>For the nitty gritty, refer to the docs. But here's most of the terms.</p>
+<p>One term you <em>won't</em> see is a nested list.  `[p('a para'), [p('in a nested list')]] is <em>not</em> valid termerized HTML. You've been warned.</p>
+<h4>Content</h4>
+<p>Arity 1 terms have their inner HTML in the arg. So, a simple headline might have plain text inside it</p>
+<pre><code>    h1('A Simple Web Page'),
+</code></pre>
+<p>A bold paragraph</p>
+<pre><code>    p(b('some bold text'))
+</code></pre>
+<p>If it's a list, the items are converted individually and concatenated.</p>
+<p>A div block with two paragraphs</p>
+<pre><code>div([p('a para'), p('another para')])
+</code></pre>
+<h4>Entities</h4>
+<p>entity escaping happens</p>
+<pre><code>    '&lt;b&gt;this wont be bold&lt;/b&gt;',
+</code></pre>
+<p>appears literally, not in bold.</p>
+<p>If you need an entity you can name one</p>
+<pre><code>&amp;(copy)
+</code></pre>
+<p>gives a copyright symbol</p>
+<pre><code>p(['Copyright ', &amp;(copy), ' 2012, Anne Ogborn'])
+</code></pre>
+<h4>String help</h4>
+<p>There's much help to perform string operations. You can get <code>format</code> style formatting</p>
+<pre><code>p('these ~d things, faith, hope, and love. But the greatest of them is ~w'-[3,love])
+</code></pre>
+<p>Concatenation usually isn't needed, but is +</p>
+<pre><code>p('two strings'+'two strings')
+</code></pre>
+<p>would usually be expressed</p>
+<pre><code>p(['two strings', 'two strings')
+</code></pre>
+<h4>Attributes</h4>
+<p>Arity 2 terms have attributes. This paragraph has a style and tooltip text.</p>
+<pre><code>    p([style='font-size: 36pt', title='tooltip text'], 'With some text'),
+</code></pre>
+<p>Like content, if there's a single attribute the list can be omitted</p>
+<pre><code>p(class=foo, 'some text')
+</code></pre>
+<p>Notice that swipl will put the quotes in the HTML. You still have to quote atoms with iffy chars in them.</p>
+<pre><code>img([src='obama.png', class=pres, height=128, width=128, alt='Barack Hussain Obama'], [])
+</code></pre>
+<p>Attributes have an even more extensive set of helper operators.
+Attributes can be specified by K=V pairs like <code>class=foo</code> or by K(V) terms like <code>class(foo)</code>. The latter form is useful for avoiding operator priority worries</p>
+<p>Concatenate. Example could be used for styling a div for emphasis, with various alert levels, alert1, alert2, alert3</p>
+<pre><code>class=alert+AlertLevel
+</code></pre>
+<p>Format. As for content</p>
+<pre><code>alt='Image of ~w'-[Subject]
+</code></pre>
+<p>Produces a query string with proper urlencoding</p>
+<pre><code>href='mep.php?'+[name=Name, email=Email, sex=Sex]
+</code></pre>
+<p>Encode an arbitrary atom or string</p>
+<pre><code>href='http://example.com/foo.php?msg='+encode(MyMessage)
+</code></pre>
+<p>Later we'll cover another way of specifying a handler, by ID. This syntax creates an URL from a location ID.</p>
+<pre><code>href=location_by_id(ID)  % treated later
+</code></pre>
+<p>A list not interpretable as right side of operator is joined with spaces. This is useful for multiple class lists.</p>
+<pre><code>class=[emphasize, left, question]
+</code></pre>
+<p>becomes</p>
+<pre><code>class="emphasize left question"
+</code></pre>
+<p>This section's certainly long, but it's the core of the tutorial. Still, lets break and do a few exercises to absorb what we've learned.</p>
+<pre><code>Exercise: Build your own example of each element in this section
+Exercise: Find a simple web page and copy it.
+</code></pre>
+<h4>Inclusion</h4>
+<p>Inclusion is swipl's mechanism for encapsulating pieces of HTML generation code. Encapsulation is signaled by <code>\</code>.</p>
+<p>Inclusion is simultaneously one of the neatest features of swipl web, and one of the greatest sources of frustrating bugs.</p>
+<p>The secrets to avoid driving yourself insane with inclusion are, first, understand whether you're in termerized HTML or tokenized HTML space.</p>
+<p>Backslash () is an escape that says, in effect 'enter tokenized HTML world'.</p>
+<p>Also, note that you can <em>not</em> omit the list for a single item following a . <code>\[...]</code> and <code>\term</code> are completely different (and atoms are terms, recall).</p>
+<p>Included lists are treated as literal, tokenized HTML to be included. So, you can include a block of HTML set up with a normal editor</p>
+<pre><code>    \['&lt;i&gt;in italic&lt;/i&gt;', '&lt;b&gt;now we have bold&lt;/b&gt;'],
+</code></pre>
+<p>More powerful, if the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. The line </p>
+<pre><code>    \some_included_stuff,
+</code></pre>
+<p>Calls the DCG </p>
+<pre><code>some_included_stuff --&gt;
+    html([p('Some included stuff')]).
+</code></pre>
+<p>Of course you can pass semantic arguments</p>
+<pre><code>\more_included_stuff('Whoop Whoop!'),
+</code></pre>
+<p>...</p>
+<pre><code>more_included_stuff(X) --&gt;
+    html([p(['More included stuff: ', b(X)])]).
+</code></pre>
+<p>Notice that you're back in tokenized HTML space (and in Prolog). You need to wrap your termerized production with html//1.</p>
+<p>Of course, note that you only have to use html//1 when it's time to make literal HTML. Nothing wrong with</p>
+<pre><code>included_stuff(X) --&gt;
+    another_inclusion(X),
+    and_a_third_inclusion(X).
+</code></pre>
+<p>Finally, if your inclusion is in another module, there's a syntax for finding it. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to explicitly specify the module. Further, there's an issue with the operator precedence, so the parens are necessary</p>
+<pre><code>\(othermodule:inclusion(X))
+</code></pre>
+<p>Finally, if you create something that takes termerized HTML as an argument, and want it properly color highlighted, use <code>meta_html</code>.</p>
+<p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, in particular <code>meta_predicate</code> and how inclusion works.</p>
+<p>At this point our exercises start building on each other. You may want to copy one of the examples to create a starting point.</p>
+<pre><code>Exercise: Create a simple web page with a form that does a GET to gather a message. You needn't build anything to handle the form
+Exercise: Encapsulate the form in a separate DCG.
+
+Exercise: Create a term that shows the MOTD or other dynamic data as an inclusion. Add it to your page with the web form.
+
+Exercise: create a block that includes it's termerized HTML contents in some fancy style border (use a style= attribute in the element). Use it to style the MOTD block. Also use it to style the web form.
+
+Exercise: Add a module declaration to your code. Create a second module, and move the styling code into it. Move the MOTD code to a third module.
+</code></pre>
+<h3>2_7 Styling</h3>
+<p>Until now our web pages have looked pretty last century. To boot, we get no help adding the common elements across all pages. Lets spiff things up.</p>
+<p>Corporate wants every page to say 'The Simple Web Page Site' across the top of every page. It's a common requirement. Why should we repeat that for each page?</p>
+<p><code>reply_html_page</code> has an arity 2 and an arity 3 form. The arity 3 version saves us</p>
+<pre><code>say_hi(Request) :-
+    reply_html_page(
+        tut_style,   % define the style of the page
+       [title('Howdy')],
+        [\page_content(Request)]).
+</code></pre>
+<p>this declares to swipl's innerds that it should apply 'tut_style' to this page.</p>
+<p>To define 'tut_style, we need to define a hook</p>
+<pre><code>:- multifile
+        user:body//2.
+
+% Body will be included
+user:body(tut_style, Body) --&gt;
+        html(body([ div(id(top), h1('The Simple Web Page Site')),
+                    div(id(content), Body)
+                  ])).
+</code></pre>
+<p>Observation here - what's coming in is <em>tokenized</em> HTML.</p>
+<p>You can do the same thing with the head. Add a hook predicate for user:head. This is a possible, but rarely the best, method of including Javascript and CSS. </p>
+<p>Of course you can have more than one style. At UH HHP we use one style for content to be viewed on the web and one style for content to be viewed in the virtual world.</p>
+<pre><code>Exercise: Add a header and footer to your web page from the exercises in 2_6 using body styling. 
+</code></pre>
+<h3>2_8 Mailman</h3>
+<p>Sometimes it's a lot easier to compute content in a place other than where it needs to be included in the html. A very common situation is including a page element that in turn requires something in the head, an extra css or js file, for example.</p>
+<p>Another situation is a web page design often used when pages can get long, with a nav bar at the top that's repeated in small type at the bottom, so users don't have to scroll back up.</p>
+<p>[ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ]</p>
+<p>body goes here</p>
+<p>nav nav nav nav nav nav nav nav nav nav nav nav nav nav nav nav </p>
+<p>If the nav bar is dynamically generated (perhaps with different links depending on if the user is logged in, is an admin, or on some preferences setting), we have to do the computation to figure the button list out twice, and we have to either abstract deciding what buttons to make or duplicate code. Either way, code gets scattered around.</p>
+<p>Mailman allows us to generate tokenized HTML in one place and 'mail' it to another</p>
+<p>2_8 sends the bottom buttons to the bottom with</p>
+<pre><code>\html_post(bottom_nav, BottomButtons)
+</code></pre>
+<p>and receives them with</p>
+<p><code>div(\html_receive(bottom_nav))</code></p>
+<p>Mailman is a useful tool. However, be aware, it operates in the termerized HTML space, sends tokenized HTML, and doesn't know about modules. </p>
+<pre><code>Exercise: Add an inclusion call to your page that takes an argument which is displayed in the page title.
+</code></pre>
+<h2>3 Handling Parameters</h2>
+<p><a id='3' /></p>
+<p>By now you're probably itching to make something real. With parameters, we can start getting dynamic.</p>
+<h3>3_1 <code>http_parameters</code></h3>
+<p>This section is about the pred http_parameters, documented at <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.9%27,swi%28%27/doc/packages/http.html%27%29%29">this page</a>. </p>
+<p>The documentation is actually quite good, so I'm going to refer you there for parameter handling, but tell you about some gotchas.</p>
+<p>Contrary to the statement at the top of the page, POST requests are not transparently handled. If you're handling a POST request you'll need to add <code>form_data</code> option to the <code>http_parameters/3</code> form. Additionally, the code apparently reads the POST data once, and can't backtrack.  3_2 demonstrates handling POST data.</p>
+<p>Secondly, there's an annoyance to handling http_parameters. If a parameter is missing or invalid it doesn't fail, it throws an exception. This makes for painful, obtuse catch blocks around your code.</p>
+<p>A semi-useful tool for websites that shove many of the same parameters around is the <code>attribute_declarations</code> option. This allows you to define how to validate various parameters in one place.</p>
+<p>Another useful gem is <code>http:request_expansion</code>. This lets you 'decorate' the request. For example, if you want some common data from a database attached to most requests, you could just have <code>request_expansion</code> decorate it.</p>
+<p>Finally, you'll soon tire of passing Request around. You can get the current Request object with <code>http_current_request.</code></p>
+<pre><code>Exercise: In the spirit of FOSS, this is FOSE (free and open source education). Give back by fiddling around enough with the post code to convince yourself that I'm right or wrong and define how it handles POST params (what does it do if the post really does contain 3 megs of image file?). Email me your results if you're willing to have them posted here.
+
+Exercise: Decide for yourself how you feel about http_parameters throwing an exception.
+
+Exercise: Create a landing page for your web form from past exercises.
+</code></pre>
+<h3>3_3 File Upload</h3>
+<p>This example is taken in it's entirety from <a href="http://www.swi-prolog.org/howto/http/FileUpload.html">The swipl docs for uploading files</a></p>
+<p>The documentation's pretty clear. </p>
+<p>Since this is all Jan's code, not mine, you'll need to query run. and then browse localhost:8080</p>
+<h2>4 Sessions</h2>
+<p><a id='4' /></p>
+<h3>4_1 Basic Session Usage</h3>
+<p>At this point you're probably fantasizing about all the stuff you can make in swipl web, but you know you're going to have to track sessions.</p>
+<p>Implementing session control is insanely simple.</p>
+<pre><code>:- use_module(library(http/http_session)).
+</code></pre>
+<p>Wait, no, cmon, it can't be that simple!</p>
+<p>Yup. It is. You got sessions.</p>
+<p>You know that loveable school/military/fascist youth camp tradition of giving people nicknames? Ones they could never change? You didn't find it loveable? Me neither.
+Lets build a site that gives people more affirming nicknames. Of course, once we pick their nickname, they're stuck with it. Right, Oh Blessed One?</p>
+<p>Each request has a current session. That session has it's own knowledge base that can be controlled with <code>http_session_assert</code>, <code>http_session_retractall</code>, and the obvious analogous calls, and queried with <code>http_session_data/1</code>.  It's elegant and ez.</p>
+<p>So, for our example, we'll check to see if we've given this person a nick. If we find one in their session data, great. </p>
+<pre><code>nick_name(Nick) :-
+    http_session_data(nick_name(Nick)),!.
+</code></pre>
+<p>If not, we'll make one and assert into the session data</p>
+<pre><code>nick_name(Nick) :-
+    nick_list(NickList),
+    random_member(Nick, NickList),
+    http_session_assert(nick_name(Nick)).
+
+nick_list([
+    'Gentle One',
+    'Blessed Spirit',
+    'Wise Soul',
+    'Wise One',
+    'Beloved Friend'
+      ]).
+
+
+Exercise: Run the server. Completely exit swipl and rerun the server. Confirm you can get a different name this way.
+
+Exercise: Add another handler that lets you reset your nick without restarting the server. Use http_session_retractall to get rid of the old nick. Hint - you can just recurse into the handler to get the new one.
+</code></pre>
+<p>We won't cover it in this course, but you can control who gets a session. If you set the <code>http_set_session_options</code> create option to noauto you can  manually create sessions. If you want you can set the session lifetime. This can dramatically affect server memory if have a typical distribution of visitors, with many arriving at a single page and a few staying. I'm writing this tutorial using the very cool online free SaaS markdown editor <a href="http://dillinger.io/">Dillinger</a>. </p>
+<p>You can also restrict which parts of your site cause a session to be created. This can be very useful for, say, an informational site that doesn't need sessions for most visitors, but raises funds by a small online store selling cafe press mugs and so on and needs sessions for the shopping cart.</p>
+<h2>5 Dispatching Revisited</h2>
+<p><a id='5' />
+I promised we'd revisit dispatching. </p>
+<h3>5_1 Prefixes and Path Rules</h3>
+<p>A couple comments about the code. First, I revist the files abstract path we defined in 1_3.</p>
+<pre><code>% from 1_3, if you've forgotten take a look
+:- multifile http:location/3.
+:- dynamic   http:location/3.
+
+http:location(files, '/f', []).
+</code></pre>
+<p>Second, I use the fact that <code>http_handler/3</code> calls it's 2nd arg with one more arg (the Request), rather than with one arg, to cut down on code. </p>
+<p>We often want to make a directory and serve everything in that directory as plain files. Or we want everything below a certain point to be handled by a different system.</p>
+<p>We can define a handler that handles a path and everything below it by adding <code>prefix</code> to the option list <code>http_handler</code> takes as it's 3rd argument.</p>
+<pre><code>:- http_handler(root('bar/moo'), a_handler(barmoo), [prefix, priority(10)]).
+</code></pre>
+<p>Of course, between abstract path specification, prefix, handler declarations spread all over creation, and the way projects just tend to grow, we need some rules to resolve conflicts. Here they are. When both A and B potentially match:</p>
+<ul>
+<li>First, if handler A handles a <em>refinement</em> of B, (that is, A is more specific) then A wins</li>
+<li>Second, if A is higher priority than B, A wins</li>
+<li>Third, if A was declared after B, A wins (note that this might be exciting in a multifile situation. Try to stay outta this one.)</li>
+</ul>
+<p>To set priority use option <code>priority(n)</code>. <code>priority(0)</code> is default.</p>
+<pre><code>Exercise: Run 5_1 and try each of these in a browser. Try to predict ahead of time what will be printed
+/
+/bar
+/bar/
+/bar/gorp
+/bar/mep/fnord
+/hoohaa
+/numnums
+/bar/moo/gleet
+/bar/moo/waa
+/hoops   (hoops isn't valid)
+</code></pre>
+<p>And another one</p>
+<pre><code>Exercise: Provide yourself a nice error message instead of 404ing in response to an invalid path (hint, you need to complete the universe of paths).
+Test your code to make sure you get the same answers as before for all the paths listed in the previous exercise.
+</code></pre>
+<h3>5_2 Handler ID's</h3>
+<p>There's no actual 5_2 file. </p>
+<p>Theres a joke that goes</p>
+<pre><code>An engineer was confronted with 17 incompatible standards for representing some data. She thought, "I'll create a new standard that is a superset of the 17".
+9 months later an engineer is confronted with 18 standards for representing....
+</code></pre>
+<p>I think of this joke when I think of handler id's in swipl.</p>
+<p>We can represent a handler in many different ways:</p>
+<pre><code>http://27.0.0.1:8080/f/bar
+/f/bar
+files(bar)
+root('f/bar')
+the f_bar_handler predicate
+</code></pre>
+<p>But ultimately none of these names <em>this</em> handler. All but the first name a <em>path</em>, concretely or abstractly. And that's something that can move around.
+The last names the handling predicate. Often that's unique to a handler, but not always, as we've seen. So you can provide an option <code>id(login_page)</code> to the http_handler option list to name the handler itself. Once it has a name you can refer to it in various places, the most useful of which is for making links that don't break when you move things around:</p>
+<pre><code>a(href=location_by_id(login_page), 'Log in')
+</code></pre>
+<p>Now, that's great if whoever wrote the login_page handler gave it an ID. But if not, can you do the next best thing, and refer to the rule that handles it? Yup.</p>
+<pre><code>a(href=location_by_id(login_page_handler), 'Log in')
+</code></pre>
+<p>Of course it's probably in some other module. We can handle that (it's not obvious we can, we're in termerized HTML, not Prolog, remember)</p>
+<pre><code>a(href=location_by_id(login_module:login_page_handler), 'Log in')
+</code></pre>
+<p>If it's got args, you'll need to omit those (so it's less useful for our exercise)</p>
+<p>And, a couple tools that occasionally are handy:</p>
+<p>Get a URI for an ID</p>
+<pre><code>http_location_by_id(+ID, -Location)
+</code></pre>
+<p>And </p>
+<pre><code>http_link_to_id(+HandleID, +Parameters, -HREF)
+</code></pre>
+<p>And now for an exercise:</p>
+<pre><code>Exercise: Load 1_3 and use the two API's above from the top level to establish the locations of some of the handlers.
+Now add some ID's to 1_3's handlers. Using reply_html_page and html//1, make a site map that links to the other pages. Make the href's by location.
+Now move 1_3's other pages to different URI's without changing your new handler code.
+</code></pre>
+<h2>6 Handlers Revisited</h2>
+<p><a id='6' /></p>
+<h3>6_1 Serving Files</h3>
+<p>I hope by this point you're getting excited about swipl web!.  </p>
+<p>Maybe you're so excited you want to serve up the swipl owl!
+No?
+Well, you probably do have assets like this you want to serve up.</p>
+<p>Fortunately, there's a canned handler that will serve files in a directory tree.</p>
+<pre><code>:- http_handler(files(.), http_reply_from_files('assets', []), [prefix]).
+</code></pre>
+<p>This line deserves some scrutiny.
+First, note that we're finally seeing why I've been dragging around this files(.) location. Our path is the root of 'files', which maps to uri /f
+Second, we're passing 'assets' to <code>http_reply_from_files</code>. That's a relative file path.
+Swipl has an abstract file path system - you've seen it when you include modules with</p>
+<pre><code>:- use_module(library(http/html_write)).
+</code></pre>
+<p><code>library</code> is an abstract file location.</p>
+<p>Lastly, note the <code>prefix</code>. So everything under the assets directory will be served. Wow, just like we're Apache or something! Maybe not.</p>
+<p>Run the server and browse http://127.0.0.1:8080/f/swipl.png
+Congrats! The owl appears.
+Hey, what happens if you ask for the directory? Hey, there's a kumquat in there. Gives a directory listing just like a real web server, even if it <em>is</em> in a language that's only used for AI. <em>And, for the record, you can make an index.html page just like normal</em>.</p>
+<p>So, what happens if we ask for something that's not there?  Try http://127.0.0.1:8080/f/robot.png</p>
+<p>Hmm... that's not so good. Nasty error message.
+In a previous exercise we made a handler for everything else, but that responded with a page (a 200 response). Lets make a real 404.</p>
+<h3>6_2 404 response</h3>
+<p>When we can't do what we're asked, we fail. Can't serve a file, so we fail.</p>
+<pre><code>serve_files(Request) :-
+     http_reply_from_files('assets', [], Request).
+</code></pre>
+<p>This is also an acceptable, if less happy, response to being asked to serve a file.</p>
+<pre><code>serve_files(Request) :-
+      http_404([], Request).
+
+
+Exercise: How would you make a 'site offline' function that the NOC staff could control?
+</code></pre>
+<p>And</p>
+<pre><code>Exercise: Modify 6_2 to serve javascript, css, and image files from 3 separate directories.
+</code></pre>
+<h3>6_3 Redirect</h3>
+<p>(no file)</p>
+<p>You're probably wondering what happened to redirects. If you're use to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redidirect, consider calling the handler of the page you're redirecting to. </p>
+<p>If you need a real redirect, use <a href="http://www.swi-prolog.org/pldoc/doc_for?object=http_redirect/3"><code>http_redirect/3</code></a></p>
+<h2>7 Including Resources</h2>
+<p><a id='7' />
+Well, we can serve files, now lets get them included in our web pages.</p>
+<h3>7_1 Using mailman to include CSS</h3>
+<p>One way to include resources is to use mailman to mail them into the head.</p>
+<p>We'll receive the stylesheet link in the head. No need for fancy, we'll just put it in the material included in the head by <code>reply_html_page</code></p>
+<pre><code>a_handler(_Request) :-
+    reply_html_page(
+        [title('a page with style'),
+         \html_receive(css)],
+        [h1('A Page That Glitters'),
+         \css('/f/specialstyle.css'),
+         p('This para is green')]).
+</code></pre>
+<p>Now we need to make sure the css link gets sent. How about making an inclusion that does this for an arbitrary URL. Then we can include whatever bit of special CSS without much code.</p>
+<pre><code>css(URL) --&gt;
+        html_post(css,
+                  link([ type('text/css'),
+                         rel('stylesheet'),
+                         href(URL)
+                       ])).
+</code></pre>
+<h3>7_2 Including Resources With <code>html_resource</code></h3>
+<p>This material is described in the <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.20%27,swi%28%27/doc/packages/http.html%27%29%29">swipl doc for resources</a></p>
+<p>Looking at 7_1, a few defects of the method come to mind</p>
+<ul>
+<li>There is nothing preventing the resource from being included twice</li>
+<li>It's a bit of unneeded ceremony</li>
+<li>If a resource needs another resource you have to remember that yourself</li>
+</ul>
+<p>Swipl to the rescue, sorta. As long as we're talking .js or .css files, you can do 'requires' type of thing. You declare 'resources', and then include them with <code>html_requires//1</code>. It's restricted to those two because it has to know how to expand them (eg for css it's to make a stylesheet link).</p>
+<p>So, our page requires some special bit of css in specialstyle.css. Unfortunately, corporate graphics standards require that we also use the corporate standard 'gradstyle.css' any time we use it. So lets enforce that.</p>
+<pre><code>:- html_resource(files('specialstyle.css'), [requires(files('gradstyle.css'))]).
+</code></pre>
+<p>The first arg is a standard path, as an URI or abstract path. The second is a <code>properties</code> list. The most useful is requires, which takes another resource path (abstract path here) or a list of such.</p>
+<p>The other bit of magic we need is to declare that we need the resource. Since the declaration's a DCG we can just stick it in the termerized HTML.</p>
+<pre><code>a_handler(_Request) :-
+    reply_html_page(
+        [title('a page with style')],
+        [h1('A Page That Glitters'),
+         \html_requires(files('specialstyle.css')),
+         p('This para is green')]).
+</code></pre>
+<p><code>reply_html_page</code> handles everything under the covers.</p>
+<p>A useful tool for debugging resource dependencies is to turn on debug(html(script))
+and monitor in the debug message window.</p>
+<pre><code>Exercise: Use highcharts (http://www.highcharts.com/) to put a chart on a web page. Include all needed material with resources. 
+</code></pre>
+<h3>7_3 Some <code>head</code> Related Bits - Dynamic Javascript, AJAX, and XHTML</h3>
+<p>No file for this section.</p>
+<p>I want this tutorial to focus on understanding concepts. So I'm going to simply mention that there are <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.18%27,swi%28%27/doc/packages/http.html%27%29%29">DCGs to create Javascript calls</a> and to support doing AJAX with <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.18%27,swi%28%27/doc/packages/http.html%27%29%29">JSON handlers</a></p>
+<p>Finally, something that's probably been driving you crazy, as it did me. By default swipl puts out non validating HTML (it doesn't even close P tags). To move into this century, call</p>
+<pre><code>    html_set_options([dialect(xhtml)])
+</code></pre>
+<p>before you start the server (you can set your DocType with that as well).</p>
+<h2>8 Authentication</h2>
+<p><a id='8' /></p>
+<p>authentication, cors, openid</p>
+<p>This is a work in progresss. This chapter is still TODO.</p>
+<p>But know that you can deal with cross site resources, basic authentication, and OpenID.</p>
+<h2>9 Running The Server</h2>
+<p><a id='9' /></p>
+<h3>9_1 Server Top Level</h3>
+<p>(no file)</p>
+<p>Til now we've given you this block of voodoo code:</p>
+<pre><code>server(Port) :-
+        http_server(http_dispatch, [port(Port)]).
+</code></pre>
+<p>Jan writes about 'three ways' to run the server. 
+<code>inetd</code>, a unix daemon that handles the outer network interface, requires starting the prolog server separately for each invokation, and isn't really an option for serious work.
+The XPCE based server receives XPCE events for incoming requests. It's not multithreaded, and it's only advantage is that debugging is slightly easier in a single threaded enviornment.</p>
+<p>For serious use, the multi-threaded <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.11.2%27,swi%28%27/doc/packages/http.html%27%29%29"><code>http_server</code></a> is the only reasonable choice.</p>
+<pre><code>Exercise: Using the link above for http_server, answer the following questions:
+</code></pre>
+<ol>
+<li>A client will be feeding your server data via long poll. What option will you have to adjust in <code>http_server</code>?</li>
+<li>Your site for aerospace engineers processes data sets on users behalf by some powerful but very cpu intensive computation that can take up to 800MB of stack (but 'normal' sized trail and global memory) and run for hours. The average site user will run one of these a day. The output is a large raw video file that is then transcoded into a standard video format. The transcoding is shelled out, but can take a long time (minutes) to complete. Use <code>http_spawn</code> and <code>http_server</code> documentation to replace the ??? sections in the code below. (Note, there is no one right answer for this question.)</li>
+</ol>
+<pre><code>
+:- use_module(library(thread_pool)).
+
+:- thread_pool_create(compute, ???,
+                      [ local(??????), global(??????), trail(??????),
+                        backlog(?)
+                      ]).
+
+:- thread_pool_create(video, ???,
+                      [ local(???), global(????), trail(????),
+                        backlog(???)
+                      ]).
+
+server(Port) :-
+        http_server(http_dispatch, [port(Port), ?????]).
+
+:- http_handler('/solve',     solve,     [spawn(compute)]).
+:- http_handler('/video', convert_video, [spawn(video)]).
+</code></pre>
+<h3>9_2 Serving on port 80</h3>
+<p>(no file)</p>
+<p>The simplest way to get your server onto port 80 to serve to the world is to have Apache reverse proxy.  if your server is on port 8000, add this to site.conf</p>
+<pre><code>ProxyPass        /myserver/ http://localhost:8000/myserver/
+ProxyPassReverse /myserver/ http://localhost:8000/myserver/
+</code></pre>
+<p>Note that this means absolute URLs in HTML content should be relative.</p>
+<pre><code>Exercise: If you have access to a server, set 5_1 up to be served from port 80.
+</code></pre>
+<h2>10 Handling The Back End</h2>
+<p><a id='10' /></p>
+<h3>10_1 SQL</h3>
+<p>(no file)
+A great quote from the swipl docs</p>
+<pre><code>The value of RDMS for Prolog is often over-estimated, as Prolog itself can manage substantial amounts of data. Nevertheless a Prolog/RDMS interface provides advantages if data is already provided in an RDMS, data must be shared with other applications, there are strong persistency requirements or there is too much data to fit in memory. 
+</code></pre>
+<p>Now, I think if we asked Jan, he'd say the last, 'persistency requirements' and 'too much data for memory' are better addressed with other solutions like <a href="http://cliopatria.swi-prolog.org/home">ClioPatria</a>.</p>
+<p>But, if you need an SQL database, swipl has a reasonable <a href="http://www.swi-prolog.org/pldoc/package/odbc.html">ODBC Interface</a></p>
+<pre><code>Exercise: Connect to whatever DB you have handy in your local environment and read out part of an existing table using swipl.
+</code></pre>
+<h3>10_2 Slightly Sick System</h3>
+<p>(no file)</p>
+<p>Are you in startup mode, or an experimental or 'fooling around' project? Want to save writing a back end? Here's a trick that's completely reasonable and saves half your dev time.</p>
+<p>Simply use the prolog kb as your data structure. Make a thread that creates a resource file of the program every nn seconds, using <a href="http://www.swi-prolog.org/pldoc/man?predicate=qsave_program%2f2"><code>qsave_program/2</code></a>. Don't forget to use the <code>goal</code> option so it knows how to restart the server. Note that you do <em>not</em> want the emulator written (you aren't making a standalone). To restore call <a href="http://www.swi-prolog.org/pldoc/man?predicate=open_resource%2f3"><code>open_resource/3</code></a>. </p>
+<p>If that seems too extreme, you can just snapshot the data. Of course you have to worry about consistency issues, so this can be messy. But if you have some things to persist it goes like this:</p>
+<pre><code>persist :-
+    repeat,
+    member(Head, [user(_,_,_,_), blog_post(_,_), ... and so on ...]),
+    clause(Head, _, Reference), % call +, -, - to get a ref from template
+    clause(AHead, ABody, Reference), % call -, - , + to get head and body
+    format(PersistStream, '~q :- ~q .~n', [AHead, ABody]),
+    fail.
+persist.
+
+Exercise: Implement one of these two schemes for a small example.
+</code></pre>
+<p>Or, if you want, just</p>
+<pre><code>Exercise: Call qsave_progam on your largest (in terms of memory) prolog program and time it
+</code></pre>
+<h3>10_3 NoSQL</h3>
+<p>(no file)
+How about using a database, but lowering the impedence bump between prolog's representation and the external DB?  Some options</p>
+<p><a href="http://cliopatria.swi-prolog.org/home">ClioPatria</a>.
+Advantages: Very low impedence bump. Most prolog friendly.
+Disadvantages: Limited acceptance, you may be on the bleeding edge.</p>
+<p>A SPARQL based DB. Prolog has good facilities for <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%282,%279%27,swi%28%27/doc/packages/semweb.html%27%29%29">talking to SPARQL</a>.</p>
+<p>A <a href="https://en.wikipedia.org/wiki/Datalog">Datalog</a> based DB. <a href="http://www.datomic.com/">Datomic</a> looks promising. Datalog is a subset of Prolog, so talking to it from prolog seems natural.</p>
+<h2>11 Debugging and Development Support</h2>
+<h3>11_1 Debugging Multi Threaded Code</h3>
+<p>(no file)</p>
+<pre><code>Exercise: run one of the examples.
+query prolog_ide(thread_monitor).
+</code></pre>
+<p>Oooh, didn't that feel good?</p>
+<h3>11_2 Reducing Abstract WTF Moments</h3>
+<p>(no file)</p>
+<h4>Resources</h4>
+<p>Use ?- debug(html(script)). to see the requested and final set of resources needed </p>
+<pre><code>Exercise: query ?- prolog_ide(debug_monitor).
+Ooh and awe, then go read debug/1 and debug/3 docs
+</code></pre>
+<p>Loading <code>library(http/http_error.pl)</code>  causes uncaught exceptions in the server to generate a 500 error page with the error. (Remove this in production, it's never a good idea to give the hacker info about your system.) Most of the examples load this.</p>
+<h4>Paths</h4>
+<p>Abstract path locations can be confusing. You can check where they really resolve with <code>http_absolute_uri</code>.</p>
+<pre><code>?- http_absolute_uri(some('awful/path'), -URI)
+</code></pre>
+<p>File paths aren't much better</p>
+<p>You can debug them by temporarily turning on the prolog flag</p>
+<pre><code>?-set_prolog_flag(verbose_file_search, true).
+</code></pre>
+<p>Any call to <code>absolute_file_name</code> (under the covers of anything that uses abstract paths) generates debug output.</p>
+<p>If you just need to check one, use <code>file_search_path('some/path', Path)</code>. It's nondet, it'll give you all the possiblities.</p>
+<h4>Where The Heck Am I?</h4>
+<p>Another handy thing to put in the top of a puzzling handler is <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.13%27,swi%28%27/doc/packages/http.html%27%29%29"><code>http_current_host</code></a>, whose last arg binds to the URI the server thinks it's serving.</p>
+<h4>Ouch, that hurt on 4000</h4>
+<p>Literate programming. Knuth says it's good, can't be bad, right? Hey, Java supports it. </p>
+<p>Gotta pick a high port number. Steeped in tradition. Worked for a Chinese guy once who hired a consultant to pick the number. Wish I could get that gig.</p>
+<p>4000 is <em>not</em> your number. The PLDoc server runs there, and may be running in the background.</p>
+<p>Phun 4 Hak3r Do0fs! Browse http://www.iamcoolmysitesinprolog.in:4000/ and read their PLDocs. That should make it easier to get in.</p>
+<pre><code>%% backup_pw(-UserName:atom, -Password:atom) is nondet 
+%   Hard coded admin password in case all else fails
+backup_pw('admin', 'abc123').
+</code></pre>
+<h3>11_3 Logging</h3>
+<p>Swipl includes a fairly bare bones logging package. Simply including </p>
+<pre><code>:- use_module(library(http/http_log)).
+</code></pre>
+<p>turns on logging.</p>
+<p>Run 10_3 and look wherever you unzipped the examples. Youll have a new file, httpd.log
+Open it, you'll see</p>
+<pre><code>/*Tue Aug 28 13:27:20 2012*/ request(2, 1346185640.163, [peer(ip(127,0,0,1)),method(get),request_uri('/favicon.ico'),path('/favicon.ico'),http_version(1-1),host('127.0.0.1'),port(8000),user_agent('Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1'),dnt('1'),connection('keep-alive')]).
+completed(2, 0.0, 428, 404, error(404,'/favicon.ico')).
+</code></pre>
+<p>Shucky darn!
+Look at that error! No favicon.ico! The world will fall in!</p>
+<p>At this moment your boss walks in and insists that you change the name of the log file.
+Groan, don't you hate this sorta thing? finding it always takes way longer than it should.</p>
+<p>Fortunately you remember it's in the settings, but of course have no idea what the setting name is. So you query </p>
+<pre><code>?- list_settings.
+</code></pre>
+<p>Ah, it's http:logfiles</p>
+<pre><code>Exercise: change that puppy!
+</code></pre>
+<h4>Stopping The Server</h4>
+<p>In theory </p>
+<pre><code>?- http_stop_server(8000, []).
+</code></pre>
+<p>will stop the server cleanly. At the moment on my system that's hanging.</p>
+<p>Just exiting prolog always hangs. It doesn't kill the server demons.</p>
+<h4>We're A Big Offical Site, We Have A NOC</h4>
+<p>Look cool, make yourself an admin page that shows <a href="http://www.swi-prolog.org/pldoc/doc/home/vnc/prolog/src/plweb/stats.pl">server stats</a></p>
+<h2>12 Security</h2>
+<p><a id='12' />
+Security Checklist</p>
+<ul>
+<li>are you vulnerable to prolog injection attacks? (easy to do with metaprogramming)</li>
+<li>shell injection attacks? (sanitize args passed to shell)</li>
+<li>SQL injection?</li>
+<li>PLDoc server (see Ouch that hurt on 4000)</li>
+<li>Don't include <code>library(http/http_errors.pl)</code> to make hackers jobs harder</li>
+</ul>
+<h2>Conclusion</h2>
+<p>Thanks for taking this tutorial. If I can improve anything please email me at aogborn (hat) uh.edu.</p>
+<p>If you make something beautiful, drop me a link.</p>
+<p>Thanks,</p>
+<p>Annie</p>
+</body>
+</html>
