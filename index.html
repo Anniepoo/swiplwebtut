@@ -23,7 +23,7 @@
 <a href='#11'>11 Debugging and Development Support</a>
 <a href='#12'>12 Security</a></p>
 <h2>Introduction</h2>
-<a id='intro' />
+<a id='intro'></a>
 <h3>Who This Course Is For</h3>
 <p>This course is for anyone who knows swi-Prolog reasonably well and wants to learn the web application framework bundled with swi-Prolog.</p>
 <p>Many programmers assume Prolog needs to be hosted with a 'normal' language. I'm not sure why. Certainly xpce wouldn't be suitable for many desktop gui systems. But those are becoming rare. Even the desktop systems I've written recently have been written as web servers that display the UI in the browser. This course is part of my response to this mentality.</p>
@@ -58,7 +58,7 @@
 <p>If you're up for it, head over to <a href="http://www.welie.com/patterns/index.php">Welie.com</a> and find yourself a pattern you like. It shouldn't be on the list below (those are done). </p>
 <p>(This is the list - it's empty now).</p>
 <h2>1 Setting Up Handlers</h2>
-<p><a id='1' /></p>
+<p><a id='1'></a></p>
 <h3>1_1 Hello Web</h3>
 <p>(Like always, I'm assuming you're reading the code in the swipl IDE, so I'm not showing the code here).</p>
 <p>Web apps in swipl can be run in various ways. The one we'll use to start is simply running as our own web server. I'm going to cover the larger issues later, so for now I'll give you a bit of voodoo code to get a basic server up and running</p>
@@ -120,7 +120,7 @@ http:location(files, '/f', []).
 </code></pre></div>
 <p>A final note. Remember that your server will some day probably be proxied to by apache, so your root path may be changed. This is an excellent reason to use abstract paths. If you have many abstract paths you can redefine http:prefix to change everything at once.</p>
 <h2>2 Generating HTML</h2>
-<p><a id='2' /></p>
+<p><a id='2'></a></p>
 <p>So far we've served plain text. Lets serve HTML.</p>
 <p>This is the largest chapter in the tutorial. It's oriented towards the built in swipl HTML generation support. I know that there are two camps when it comes to HTML generation.</p>
 <p>The 'template' camp wants to edit HTML with normal HTML tools, and will live with awkward php/jsp/asp style <code>&lt;% .... %&gt;</code> escaping for dynamic generation.</p>
@@ -362,6 +362,7 @@ user:body(tut_style, Body) --&gt;
 <div class='precode exercise'><pre><code>Exercise: Add a header and footer to your web page from the exercises in 2_6 using body styling. 
 </code></pre></div>
 <h3>2_8 Mailman</h3>
+<p><a href='http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.17.2%27,swi%28%27/doc/packages/http.html%27%29%29'>Mailman</a> is a facility for creating HTML that ultimately ends up somewhere besides where you generated it</p>
 <p>Sometimes it's a lot easier to compute content in a place other than where it needs to be included in the html. A very common situation is including a page element that in turn requires something in the head, an extra css or js file, for example.</p>
 <p>Another situation is a web page design often used when pages can get long, with a nav bar at the top that's repeated in small type at the bottom, so users don't have to scroll back up.</p>
 <p>[ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ][ NAV  ]</p>
@@ -378,7 +379,7 @@ user:body(tut_style, Body) --&gt;
 <div class='precode exercise'><pre><code>Exercise: Add an inclusion call to your page that takes an argument which is displayed in the page title.
 </code></pre></div>
 <h2>3 Handling Parameters</h2>
-<p><a id='3' /></p>
+<p><a id='3'></a></p>
 <p>By now you're probably itching to make something real. With parameters, we can start getting dynamic.</p>
 <h3>3_1 <code>http_parameters</code></h3>
 <p>This section is about the pred http_parameters, documented at <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.9%27,swi%28%27/doc/packages/http.html%27%29%29">this page</a>. </p>
@@ -401,7 +402,7 @@ Exercise: Create a landing page for your web form from past exercises.
 <p>The documentation's pretty clear. </p>
 <p>Since this is all Jan's code, not mine, you'll need to query run. and then browse localhost:8080</p>
 <h2>4 Sessions</h2>
-<p><a id='4' /></p>
+<p><a id='4'></a></p>
 <h3>4_1 Basic Session Usage</h3>
 <p>At this point you're probably fantasizing about all the stuff you can make in swipl web, but you know you're going to have to track sessions.</p>
 <p>Implementing session control is insanely simple.</p>
@@ -438,7 +439,7 @@ Exercise: Add another handler that lets you reset your nick without restarting t
 <p>We won't cover it in this course, but you can control who gets a session. If you set the <code>http_set_session_options</code> create option to noauto you can  manually create sessions. If you want you can set the session lifetime. This can dramatically affect server memory if have a typical distribution of visitors, with many arriving at a single page and a few staying.</p>
 <p>You can also restrict which parts of your site cause a session to be created. This can be very useful for, say, an informational site that doesn't need sessions for most visitors, but raises funds by a small online store selling cafe press mugs and so on and needs sessions for the shopping cart.</p>
 <h2>5 Dispatching Revisited</h2>
-<p><a id='5' />
+<p><a id='5'></a>
 I promised we'd revisit dispatching. </p>
 <h3>5_1 Prefixes and Path Rules</h3>
 <p>A couple comments about the code. First, I revist the files abstract path we defined in 1_3.</p>
@@ -514,7 +515,7 @@ Now add some ID's to 1_3's handlers. Using reply_html_page and html//1, make a s
 Now move 1_3's other pages to different URI's without changing your new handler code.
 </code></pre></div>
 <h2>6 Handlers Revisited</h2>
-<p><a id='6' /></p>
+<p><a id='6'></a></p>
 <h3>6_1 Serving Files</h3>
 <p>I hope by this point you're getting excited about swipl web!.  </p>
 <p>Maybe you're so excited you want to serve up the swipl owl!
@@ -533,16 +534,16 @@ Swipl has an abstract file path system - you've seen it when you include modules
 <p>Lastly, note the <code>prefix</code>. So everything under the assets directory will be served. Wow, just like we're Apache or something! Maybe not.</p>
 <p>Run the server and browse http://127.0.0.1:8080/f/swipl.png
 Congrats! The owl appears.
-Hey, what happens if you ask for the directory? Hey, there's a kumquat in there. Gives a directory listing just like a real web server, even if it <em>is</em> in a language that's only used for AI. <em>And, for the record, you can make an index.html page just like normal</em>.</p>
+Hey, what happens if you ask for the directory? There's a kumquat in there. Gives a directory listing just like a real web server, even if it <em>is</em> in a language that's only used for AI. And, for the record, you can make an index.html page just like normal</em>.</p>
 <p>So, what happens if we ask for something that's not there?  Try http://127.0.0.1:8080/f/robot.png</p>
 <p>Hmm... that's not so good. Nasty error message.
 In a previous exercise we made a handler for everything else, but that responded with a page (a 200 response). Lets make a real 404.</p>
 <h3>6_2 404 response</h3>
-<p>When we can't do what we're asked, we fail. Can't serve a file, so we fail.</p>
+<p>When we can't do what we're asked, we fail. Can't serve a file at http://127.0.0.1:8080/f/robot.png, so we fail.</p>
 <div class='precode'><pre><code>serve_files(Request) :-
      http_reply_from_files('assets', [], Request).
 </code></pre></div>
-<p>This is also an acceptable, if less happy, response to being asked to serve a file.</p>
+<p>Instead of an ugly error lets do the right thing and serve a 404</p>
 <div class='precode'><pre><code>serve_files(Request) :-
       http_404([], Request).
 </code></pre></div>
@@ -558,7 +559,7 @@ Exercise: How would you make a 'site offline' function that the NOC staff could 
 <p>You're probably wondering what happened to redirects. If you're use to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redidirect, consider calling the handler of the page you're redirecting to. </p>
 <p>If you need a real redirect, use <a href="http://www.swi-prolog.org/pldoc/doc_for?object=http_redirect/3"><code>http_redirect/3</code></a></p>
 <h2>7 Including Resources</h2>
-<p><a id='7' />
+<p><a id='7'></a>
 Well, we can serve files, now lets get them included in our web pages.</p>
 <h3>7_1 Using mailman to include CSS</h3>
 <p>One way to include resources is to use mailman to mail them into the head.</p>
@@ -613,12 +614,12 @@ and monitor in the debug message window.</p>
 </code></pre></div>
 <p>before you start the server (you can set your DocType with that as well).</p>
 <h2>8 Authentication</h2>
-<p><a id='8' /></p>
+<p><a id='8'></a></p>
 <p>authentication, cors, openid</p>
 <p>This is a work in progresss. This chapter is still TODO.</p>
 <p>But know that you can deal with cross site resources, basic authentication, and OpenID.</p>
 <h2>9 Running The Server</h2>
-<p><a id='9' /></p>
+<p><a id='9'></a></p>
 <h3>9_1 Server Top Level</h3>
 <p>(no file)</p>
 <p>Til now we've given you this block of voodoo code:</p>
@@ -664,7 +665,7 @@ ProxyPassReverse /myserver/ http://localhost:8000/myserver/
 <div class='precode exercise'><pre><code>Exercise: If you have access to a server, set 5_1 up to be served from port 80.
 </code></pre></div>
 <h2>10 Handling The Back End</h2>
-<p><a id='10' /></p>
+<p><a id='10'></a></p>
 <h3>10_1 SQL</h3>
 <p>(no file)
 A great quote from the swipl docs</p>
@@ -767,7 +768,7 @@ Groan, don't you hate this sorta thing? finding it always takes way longer than 
 <h4>We're A Big Offical Site, We Have A NOC</h4>
 <p>Look cool, make yourself an admin page that shows <a href="http://www.swi-prolog.org/pldoc/doc/home/vnc/prolog/src/plweb/stats.pl">server stats</a></p>
 <h2>12 Security</h2>
-<p><a id='12' />
+<p><a id='12'></a>
 Security Checklist</p>
 <ul>
 <li>are you vulnerable to prolog injection attacks? (easy to do with metaprogramming)</li>

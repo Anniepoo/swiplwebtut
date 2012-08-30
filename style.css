@@ -16,6 +16,13 @@ body {
     text-decoration: underline;
 }
 
+a {
+    color: #CC0000;
+    text-decoration: underline;
+}
+
+
+
 em {
 	font-weight: bold;	
 	font-style: normal;
