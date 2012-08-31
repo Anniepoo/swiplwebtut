@@ -171,7 +171,7 @@ Welcome back.</p>
 <p>Nice bunny slippers.</p>
 <p>OK, Annie, get on with it.
 Finally, we see something that looks like reasonable HTML generation.</p>
-<p>Web pages are inherently nested structures that, while they have a structural similarity to their HTML represenation,
+<p>Web pages are inherently nested structures that, while they have a structural similarity to their HTML representation,
 are not identical. Sounds like a job for a language with good parsing and language transformation skills.
 Sounds like a job for... Paaa-Roooolloooooooooog.... ::Jan crashes thru the skylight and lands in a heap on the floor, 
 wearing tights and a cape. Annie picks him up and dusts him off::</p>
@@ -184,8 +184,7 @@ wearing tights and a cape. Annie picks him up and dusts him off::</p>
         TokenizedHtml,
         []),
 </code></pre></div>
-<p>This bit of naughtiness uses the library DCG head//1 </p>
-<p>The //1 argument is a DSL to define HTML. phrase will unify in the above when TokenizedHtml is the tokenized HTML equivilent of the html defined by the first arg.</p>
+<p>The //1 argument is a DSL (domain specific language) to define HTML. phrase will unify in the above when <code>TokenizedHtml</code> is the tokenized HTML equivilent of the html defined by the first arg.</p>
 <p>Most of the rest of this chapter will concentrate on this DSL, which is our 'termerized HTML'.</p>
 <p>Now, in our snippet above, note that <em>this</em> is the prolog</p>
 <div class='precode'><pre><code>    phrase(
@@ -203,9 +202,10 @@ wearing tights and a cape. Annie picks him up and dusts him off::</p>
 <h3>2_4 Proving it's a real DSL</h3>
 <p>Lets prove that it's a real DCG by abstracting out the generation into it's own nonterminal.</p>
 <div class='precode'><pre><code>my_nonterm --&gt;
-    html([html(head([title('Howdy')]),
-               body([h1('A Simple Web Page'),
-              p('With some text')]))]).
+	html([html([head([title('Howdy')]),
+	           body([h1('A Simple Web Page'),
+		      p('With some text')])])]).
+
 </code></pre></div>
 <h3>2_5 reply_html_page</h3>
 <p>We probably don't want to generate our own head and body tags anyway. We're seeing more ceremony than we really need. swipl provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.</p>
