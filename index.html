@@ -644,7 +644,7 @@ Well, we can serve files, now lets get them included in our web pages.</p>
 <li>If a resource needs another resource you have to remember that yourself</li>
 </ul>
 <p>Swipl to the rescue, sorta. As long as we're talking .js or .css files, you can do 'requires' type of thing. You declare 'resources', and then include them with <code>html_requires//1</code>. It's restricted to those two because it has to know how to expand them (eg for css it's to make a stylesheet link).</p>
-<p>So, our page requires some special bit of css in specialstyle.css. Unfortunately, corporate graphics standards require that we also use the corporate standard 'gradstyle.css' any time we use it. So lets enforce that.</p>
+<p>So, our page requires some special bit of css in specialstyle.css, which depends on the corporate standard 'gradstyle.css'. So lets enforce including gradstyle.css any time we include specialstyle.css.</p>
 <div class='precode'><pre><code>:- html_resource(files('specialstyle.css'), [requires(files('gradstyle.css'))]).
 </code></pre></div>
 <p>The first arg is a standard path, as an URI or abstract path. The second is a <code>properties</code> list. The most useful is requires, which takes another resource path (abstract path here) or a list of such.</p>
@@ -681,9 +681,9 @@ and monitor in the debug message window.</p>
 <div class='precode'><pre><code>server(Port) :-
         http_server(http_dispatch, [port(Port)]).
 </code></pre></div>
-<p>Jan writes about 'three ways' to run the server. 
-<code>inetd</code>, a unix daemon that handles the outer network interface, requires starting the prolog server separately for each invokation, and isn't really an option for serious work.
-The XPCE based server receives XPCE events for incoming requests. It's not multithreaded, and it's only advantage is that debugging is slightly easier in a single threaded enviornment.</p>
+<p>Jan writes about 'three ways' to run the server.</p>
+<p><code>inetd</code>, a unix daemon that handles the outer network interface, requires starting the prolog server separately for each invokation, and isn't really an option for serious work.</p>
+<p>The XPCE based server receives XPCE events for incoming requests. It's not multithreaded, and it's only advantage is that debugging is slightly easier in a single threaded enviornment.</p>
 <p>For serious use, the multi-threaded <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.11.2%27,swi%28%27/doc/packages/http.html%27%29%29"><code>http_server</code></a> is the only reasonable choice.</p>
 <div class='precode exercise'><pre><code>Exercise: Using the link above for http_server, answer the following questions:
 </code></pre></div>
@@ -772,7 +772,7 @@ query prolog_ide(thread_monitor).
 <div class='precode exercise'><pre><code>Exercise: query ?- prolog_ide(debug_monitor).
 Ooh and awe, then go read debug/1 and debug/3 docs
 </code></pre></div>
-<h4>Better Error Messages</p>
+<h4>Better Error Messages</h4>
 <p>Loading <code>library(http/http_error.pl)</code>  causes uncaught exceptions in the server to generate a 500 error page with the error. (Remove this in production, it's never a good idea to give the hacker info about your system.) Most of the examples load this.</p>
 <h4>Paths</h4>
 <p>Abstract path locations can be confusing. You can check where they really resolve with <code>http_absolute_uri</code>.</p>
