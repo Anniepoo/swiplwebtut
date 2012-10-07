@@ -48,6 +48,7 @@
 </ul>
 <p>The example programs are labelled with the chapter and section number, so webserver1_2.pl is the code for chapter one section 2.</p>
 <p>Different people will have different backgrounds and learning styles. Whatever works for you works.</p>
+<p><a href='http://www.swi-prolog.org/howto/http/'>This page</a> in the swipl docs is useful as well</p>
 <h3>Getting Stuck</h3>
 <p>If you have questions and reasonable effort doesn't answer them, drop me email at aogborn (somechar) uh.edu. Please, if you're taking a beginning Prolog course, ask your instructor. Questions about family trees will be ignored. But if you're working on a web app, feel free.</p>
 <p>Asking on ##Prolog on freenode.net is also a good way to get answers.</p>
@@ -109,7 +110,7 @@
 <p>On to</p>
 <h3>1_3 Defining new abstract paths</h3>
 <p>This code adds a hook predicate that defines a new abstract path. With it, we can now say files('zap.gif') to serve /f/zap.gif. If we move the files somewhere else we can just change one line.</p>
-<p>A something to notice (obvious perhaps, but a source of much pain for me) is that the path to the root of <em>files</em> (second arg) is an absolute path specification, not root(.) </p>
+<p>Something to notice (obvious perhaps, but a source of much pain for me) is that the path to the root of <em>files</em> (second arg) is an absolute path specification, not root(.) </p>
 <div class='precode'><pre><code>:- multifile http:location/3.
 :- dynamic   http:location/3.
 
@@ -127,7 +128,11 @@ http:location(files, '/f', []).
 <p>The 'template' camp wants to edit HTML with normal HTML tools, and will live with awkward php/jsp/asp style <code>&lt;% .... %&gt;</code> escaping for dynamic generation.</p>
 <p>The dynamic camp wants to dynamically generate web pages, and will live with 'funny looking' HTML to do that. </p>
 <p>The built in generation is firmly in the 'dynamic' camp. If you pitch your tent in the template camp, look at <a href="http://www.cs.otago.ac.nz/staffpriv/ok/pwp.pl">PWP</a>. Swipl provides support for <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.21%27,swi%28%27/doc/packages/http.html%27%29%29">integrating PWP</a>.</p>
-<h3>2_1</h3>
+<p>That said, you can indeed output a block of 'normal' HTML. Some strategies for doing so (skipping ahead a bit):</p>
+<ul><li>Include bits of 'normal' HTML in an otherwise dynamic page by using the inclusion mechanism described under 'inclusion' in 2_6</li>
+<li>Serve entire static pages (eg. a terms of service page) using the file serving mechanisms described in 6_1</li>
+</ul>
+<h3>2_1 Directly printing HTML</h3>
 <p>We can serve HTML just by printing it.</p>
 <div class='precode'><pre><code>say_hi(_Request) :-
         format('Content-type: text/html~n~n'),
@@ -167,39 +172,23 @@ http:location(files, '/f', []).
 <div class='precode exercise'><pre><code>Exercise: Run 2_2 and look at the generated HTML.
 </code></pre></div>
 <h3>2_3 html//1 And Termerized HTML</h3>
-<p class='warning'>A word of warning. If you never really got comfortable with DCG's, stop right now and go get comfy. 
-Welcome back.</p>
-<p>Nice bunny slippers.</p>
+<p class='warning'>A word of warning. If you never really got comfortable with DCG's, stop right now and go get comfy. Welcome back -- nice bunny slippers.</p>
 <p>OK, Annie, get on with it.
 Finally, we see something that looks like reasonable HTML generation.</p>
-<p>Web pages are inherently nested structures that, while they have a structural similarity to their HTML representation,
-are not identical. Sounds like a job for a language with good parsing and language transformation skills.
-Sounds like a job for... Paaa-Roooolloooooooooog.... ::Jan crashes thru the skylight and lands in a heap on the floor, 
-wearing tights and a cape. Annie picks him up and dusts him off::</p>
-<p>At any rate, it's a reasonable thing to do with DCG's, and that's what swipl does, in a sorta sideways way.</p>
+<p>Web pages are inherently nested structures of boxes within boxes and areas on a page. While they have a strong structural similarity to their HTML representation,
+they are not identical. A search box is not, conceptually, just a text field, but is a thing unto itself. Representing the page&apos;s structure and converting it to HTML sounds like a job for a language with good parsing and language transformation skills.
+It sounds like a job for... Paaa-Roooolloooooooooog....</p>
+<p>At any rate, it's a reasonable thing to do with DCG's, and that's what swipl does, in a sorta sideways way. Here's an example:</p>
 <div class='precode'><pre><code>    phrase(
-        html(html(
+        html(<font color="#FF4444">html(
         [head(title('Howdy')),
          body([h1('A Simple Web Page'),
-              p('With some text')])])),
+              p('With some text')])])</font>),
         TokenizedHtml,
         []),
 </code></pre></div>
-<p>The //1 argument is a DSL (domain specific language) to define HTML. phrase will unify in the above when <code>TokenizedHtml</code> is the tokenized HTML equivilent of the html defined by the first arg.</p>
-<p>Most of the rest of this chapter will concentrate on this DSL, which is our 'termerized HTML'.</p>
-<p>Now, in our snippet above, note that <em>this</em> is the prolog</p>
-<div class='precode'><pre><code>    phrase(
-        html(...OTHER STUFF...),
-        TokenizedHtml,
-        []),
-</code></pre></div>
-<p>and <em>this</em> is the termerized HTML OTHER STUFF</p>
-<div class='precode'><pre><code>      html(
-        [head(title('Howdy')),
-         body([h1('A Simple Web Page'),
-              p('With some text')])])
-</code></pre></div>
-<p>Before we get to the format of the termerized HTML, we've got a bit more examination of the Prolog. So on to </p>
+<p><code>phrase</code>'s first argument is a library DCG, <code>html//1</code>, whose argument (in red) is a DSL (domain specific language) which defines the HTML it recognizes. So, phrase/2 will unify in the above when <code>TokenizedHtml</code> is the tokenized HTML equivalent of the html defined by the first arg.</p>
+<p>It is code in this DSL which is our 'termerized HTML'.</p>
 <h3>2_4 Proving it's a real DSL</h3>
 <p>Lets prove that it's a real DCG by abstracting out the generation into it's own nonterminal.</p>
 <div class='precode'><pre><code>my_nonterm --&gt;
@@ -209,26 +198,35 @@ wearing tights and a cape. Annie picks him up and dusts him off::</p>
 
 </code></pre></div>
 <h3>2_5 reply_html_page</h3>
-<p>We probably don't want to generate our own head and body tags anyway. We're seeing more ceremony than we really need. swipl provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.</p>
+<p>Generating our own head and body tags is more ceremony than we really need. swipl provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.</p>
 <div class='precode'><pre><code>say_hi(_Request) :-
     reply_html_page(
        [title('Howdy')],
        [h1('A Simple Web Page'),
         p('With some text')]).
 </code></pre></div>
-<p>We're down to a single API call that takes some termerized HTML to include in the head and the contents of the body - about what we can minimally supply.</p>
-<p>You're probably thinking 'oh, man, I don't control the head?' - you do, we'll get there. There's a <code>reply_html_page/3</code> that takes a style name as a first arg. This is where most of the head comes from.</p>
+<p>We're down to a single API call that takes some termerized HTML to include in the head and the contents of the body, which is pretty close to zero 'non data' ink.</p>
+<p>(If you're paniced and thinking 'oh, man, I don't control the head?', relax - you do, we'll get there when we cover the arity 3 version <code>reply_html_page/3</code> in section 2_7.</p>
 <h3>2_6 Termerized HTML Syntax</h3>
-<p>Finally! We're ready to look at the termerized HTML syntax</p>
-<p>The swipl docs for this are in <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.17%27,swi%28%27/doc/packages/http.html%27%29%29">this location</a> which I recommend bookmarking, as finding it is always exciting.</p>
+<p>Now we're ready to look at the termerized HTML syntax. You'll definitely want to have 2_6 open in front of you as you read this.</p>
+<p>The swipl docs for this are in <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.17%27,swi%28%27/doc/packages/http.html%27%29%29">this location</a> (which I recommend bookmarking, as finding it is always exciting).</p>
 <p>Termerized HTML uses an arity 1 or 2 term for each HTML tag.</p>
-<p>The arg of arity 1 terms is the innerHTML. The args of arity 2 terms are atrributes and innerHTML.</p>
-<p>Either one can be a list to allow multiple items.</p>
+<p>The arg of arity 1 terms is the innerHTML. The args of arity 2 terms are attributes and innerHTML. Either one can be a list to allow multiple items.</p>
+<div class='precode'><pre><code>say_hi(_Request) :-
+    reply_html_page(
+       [title('Howdy')],
+       [
+        h1('A Simple Web Page'),  % arity 1
+        p(class=bodytext, 'With some text'),  % arity 2
+        p([class=bodytext, style='font-size: 120%'], ['Bigger text', b('some bold')])
+        ]).
+</code></pre></div>
+<p></p>
 <p>The html//1 term takes a term or a list as it's sole argument, in the same format at the innerHTML argument of tag term</p>
-<p>Here's most of the forms you can apply:</p>
-<p>One form you <em>won't</em> see is a nested list.  `[p('a para'), [p('in a nested list')]] is <em>not</em> valid termerized HTML. You've been warned.</p>
+<h4>Here's most of the forms you can apply:</h4>
+<p>One form you <em>won't</em> see is a nested list.  <code>[p('a para'), [p('in a nested list')]]</code> is <em>not</em> valid termerized HTML. You've been warned.</p>
 <h4>Inner HTML</h4>
-<p>Arity 1 terms have their inner HTML in the arg. So, a simple headline might have plain text inside it</p>
+<p>A simple headline with plain text inside it</p>
 <div class='precode'><pre><code>    h1('A Simple Web Page'),
 </code></pre></div>
 <p>A bold paragraph</p>
@@ -259,14 +257,15 @@ wearing tights and a cape. Annie picks him up and dusts him off::</p>
 <p>would usually be expressed</p>
 <div class='precode'><pre><code>p(['two strings', 'two strings')
 </code></pre></div>
+<p>Though the first doesn't leave a space between them</p>
 <h4>Attributes</h4>
-<p>Arity 2 terms have attributes. This paragraph has a style and tooltip text.</p>
+<p>This paragraph has a style and tooltip text.</p>
 <div class='precode'><pre><code>p([style='font-size: 36pt', title='tooltip text'], 'With some text'),
 </code></pre></div>
-<p>Like content, if there's a single attribute the list can be omitted</p>
+<p>If there's a single attribute the list can be omitted</p>
 <div class='precode'><pre><code>p(class=foo, 'some text')
 </code></pre></div>
-<p>Notice that swipl will put the quotes in the HTML. You still have to quote atoms with iffy chars in them.</p>
+<p>Notice that swipl will put the quotes around foo in the HTML. As always in Prolog you have to quote atoms with iffy chars in them, like the src and alt attributes below.</p>
 <div class='precode'><pre><code>img([src='obama.png', class=pres, height=128, width=128, alt='Barack Hussain Obama'], [])
 </code></pre></div>
 <p>Attributes have an even more extensive set of helper operators.
@@ -277,13 +276,13 @@ Attributes can be specified by K=V pairs like <code>class=foo</code> or by K(V) 
 <p>Format strings (like <code>format/2</code> go like this:</p>
 <div class='precode'><pre><code>alt='Image of ~w'-[Subject]
 </code></pre></div>
-<p>This produces a query string with proper urlencoding</p>
+<p>+List produces a query string with proper urlencoding</p>
 <div class='precode'><pre><code>href='mep.php?'+[name=Name, email=Email, sex=Sex]
 </code></pre></div>
 <p>This urlencodes an arbitrary atom or string</p>
 <div class='precode'><pre><code>href='http://example.com/foo.php?msg='+encode(MyMessage)
 </code></pre></div>
-<p>Later we'll cover another way of specifying a handler, by ID. This syntax creates an URL from a location ID.</p>
+<p>Later we'll cover another way of specifying a handler, by ID. This syntax creates a URL from a location ID.</p>
 <div class='precode'><pre><code>href=location_by_id(ID)  % treated later
 </code></pre></div>
 <p>A list not interpretable as right side of operator is joined with spaces. This is useful for multiple class lists.</p>
@@ -294,19 +293,18 @@ Attributes can be specified by K=V pairs like <code>class=foo</code> or by K(V) 
 </code></pre></div>
 <p>This section's certainly long, but it's the core of the tutorial. Still, lets break and do a few exercises to absorb what we've learned.</p>
 <div class='precode exercise'><pre><code>Exercise: Build your own example of each element in this section
-Exercise: Find a simple web page and copy it.
+Exercise: Convert a simple web page (or part of one) into termerized HTML.
 </code></pre></div>
 <h4>Inclusion</h4>
 <p>Inclusion is swipl's mechanism for encapsulating pieces of HTML generation code. Encapsulation is signaled by <code>\</code>.</p>
 <p>Inclusion is simultaneously one of the neatest features of swipl web, and one of the greatest sources of frustrating bugs.</p>
-<p>The secrets to avoid driving yourself insane with inclusion are, first, understand whether you're in termerized HTML or tokenized HTML space.</p>
-<p>Backslash () is an escape that says, in effect 'enter tokenized HTML world'.</p>
-<p>Also, note that you can <em>not</em> omit the list for a single item following a . <code>\[...]</code> and <code>\term</code> are completely different (and atoms are terms, recall).</p>
+<p>The secrets to avoid driving yourself insane with inclusion are, first, understand whether you're in termerized HTML or tokenized HTML space. Second, be aware you aren't in prolog, and need to follow the DSL's, not Prolog's, module rules.</p>
 <p>Included lists are treated as literal, tokenized HTML to be included. So, you can include a block of HTML set up with a normal editor</p>
 <div class='precode'><pre><code>    \['&lt;i&gt;in italic&lt;/i&gt;', '&lt;b&gt;now we have bold&lt;/b&gt;'],
 </code></pre></div>
-<p class='warning'>A word of caution here. This breaks the contract that <code>html//1</code> will always produce valid HTML.</p>
-<p>More powerful, if the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. The line </p>
+<p class='warning'>(If you do this you can't depend on <code>html//1</code> always producing valid HTML.)</p>
+<p>More powerful, if the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. This means you can create structured, reusable components of web pages, and pays off many times the slight awkwardness of 'funny looking html'.</p>
+<p>The line </p>
 <div class='precode'><pre><code>    \some_included_stuff,
 </code></pre></div>
 <p>Calls the DCG </p>
@@ -320,26 +318,34 @@ Exercise: Find a simple web page and copy it.
 <div class='precode'><pre><code>more_included_stuff(X) --&gt;
     html([p(['More included stuff: ', b(X)])]).
 </code></pre></div>
-<p>Notice that you're back in tokenized HTML space (and in Prolog). You need to wrap your termerized production with html//1.</p>
-<p>Of course, note that you only have to use html//1 when it's time to make literal HTML. Nothing wrong with</p>
+<p>Notice you're back in tokenized HTML space (and in Prolog). You need <code>html//1</code> here.</p>
+<p>You only need <code>html//1</code> when it's time to make literal HTML. Nothing wrong with</p>
 <div class='precode'><pre><code>included_stuff(X) --&gt;
     another_inclusion(X),
     and_a_third_inclusion(X).
 </code></pre></div>
-<p>Finally, if your inclusion is in another module, there's a syntax for finding it. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to explicitly specify the module. Further, there's an issue with the operator precedence, so the parens are necessary</p>
+<p>If your inclusion is in another module, there's a syntax for finding it. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to explicitly specify the module. Further, there's an issue with the operator precedence, so the parens are necessary</p>
 <div class='precode'><pre><code>\(othermodule:inclusion(X))
 </code></pre></div>
+<p>If you make code that passes termerized html around, and then attempts to call semantic arguments within it, you may need <code>meta_predicate/1</code> to end up in the right module. Here be dragons.</p>
 <p>Finally, if you create something that takes termerized HTML as an argument, and want it properly color highlighted, use <code>html_meta/1</code>.</p>
 <p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, in particular <code>meta_predicate</code> and how inclusion works.</p>
+<p>A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \</p>
+<p class='warning'>And, a caution. The list brackets for including a literal are not optional! <code>\[...]</code> and <code>\term</code> are completely different.</p>
 <p>At this point our exercises start building on each other. You may want to copy one of the examples to create a starting point.</p>
-<div class='precode exercise'><pre><code>Exercise: Create a simple web page with a form that does a GET to gather a message. You needn't build anything to handle the form
-Exercise: Encapsulate the form in a separate DCG.
+<div class='precode exercise'><pre><code>Exercise: Create a simple web page with a form that does a GET to gather a message. You needn't build anything to handle the form.
 
-Exercise: Create a term that shows the MOTD or other dynamic data as an inclusion. Add it to your page with the web form.
+Exercise: Encapsulate the form in a separate DCG so it can be reused.
 
-Exercise: create a block that includes it's termerized HTML contents in some fancy style border (use a style= attribute in the element). Use it to style the MOTD block. Also use it to style the web form.
+Exercise: Create a DCG motd//0 that shows the MOTD or other dynamic data as an inclusion. Add it to your page.
 
-Exercise: Add a module declaration to your code. Create a second module, and move the styling code into it. Move the MOTD code to a third module.
+Exercise: create a DCG my_fancy_border//1 whose argument is termerized HTML representing what's inside the border. Make it surround the passed HTML with a div with some fancy border. (for now use a style= attribute in the div, since we haven't covered stylesheet inclusion). 
+Use it to style the MOTD block. Also use it to style the web form.
+
+Exercise: Perform these refactorings: 
+Add a module declaration to your code. 
+Create a second module, and move my_fancy_border into it. 
+Move  motd//0 to a third module.
 </code></pre></div>
 <h3>2_7 Styling</h3>
 <p>Until now our web pages have looked pretty last century. To boot, we get no help adding the common elements across all pages. Lets spiff things up.</p>
@@ -400,8 +406,7 @@ We already have the list of buttons, can we avoid duplicating that code?</p>
 <p><code>div(\html_receive(bottom_nav))</code></p>
 <div class='precode'><pre><code>
 page_content(_Request) -->
-	html(
-	   [
+	html([
 	    h1('Demonstrating Mailman'),
 	    div(\nav_bar),
 	    p('The body goes here'),
@@ -410,6 +415,7 @@ page_content(_Request) -->
 
 nav_bar -->
 	{
+    % we only need to find the ButtonNames once
 	    findall(Name, nav(Name, _), ButtonNames),
 	    maplist(as_top_nav, ButtonNames, TopButtons),
 	    maplist(as_bottom_nav, ButtonNames, BottomButtons)
@@ -417,7 +423,9 @@ nav_bar -->
 	html([\html_post(bottom_nav, BottomButtons) | TopButtons]).
 </code></pre></div>
 <p>A common reason to do this a page element that in turn requires something in the head, say a
-widget that requires an extra css or js file.</p>
+widget that requires an extra css or js file. Another common reason is an element
+(say a list of blog posts)
+whose contents are accumulated during page generation</p>
 <p>Mailman is a useful tool. However, be aware, it doesn't know about modules and gets expanded elsewhere. You need to use the <code>\(module:name(args))</code> form for any inclusions you mail.</p>
 <div class='precode exercise'><pre><code>Exercise: Add an inclusion call to your page that takes an argument which is displayed in the page title.
 </code></pre></div>
@@ -427,8 +435,9 @@ widget that requires an extra css or js file.</p>
 <h3>3_1 <code>http_parameters</code></h3>
 <p>This section is about the pred http_parameters, documented at <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.9%27,swi%28%27/doc/packages/http.html%27%29%29">this page</a>. </p>
 <p>The documentation is actually quite good, so I'm going to refer you there for parameter handling, but tell you about some gotchas.</p>
-<p>The first gotcha is that handling http_parameters. If a parameter is missing or invalid it doesn't fail, it throws an exception. 
+<p>Gotcha #1: If a parameter is missing or invalid it doesn't fail, it throws an exception. 
 This means you need a catch block around your code. In my own code I've written a http_parameters_quietly that wraps the exception and fails.</p>
+<p>Gotcha #2: POST requests where the body has query string syntax aren't available without the form_data option.</p>
 <h3>3_2 Handling POST requests</h3>
 <p>POST is often used to send large chunks of data not in search string format. Example 3_2 demonstrates directly reading the 
 data POSTed by a web form.</p>
@@ -454,9 +463,9 @@ Exercise: Create a landing page for your web form from past exercises.
 </code></pre></div>
 <p>Wait, no, cmon, it can't be that simple!</p>
 <p>Yup. It is. You got sessions.</p>
-<p>You know that loveable school/military/fascist youth camp tradition of giving people nicknames? Ones they could never change? You didn't find it loveable? Me neither.
-Lets build a site that gives people more affirming nicknames. Of course, once we pick their nickname, they're stuck with it. Right, Oh Blessed One?</p>
-<p>Each request has a current session. That session has it's own knowledge base that can be controlled with <code>http_session_assert</code>, <code>http_session_retractall</code>, and the obvious analogous calls, and queried with <code>http_session_data/1</code>.  It's elegant and ez.</p>
+<p>You know that loveable school/military/fascist youth camp tradition of giving people horrible nicknames? Ones they could never change? You didn't find it loveable? Me neither.
+Lets build a site that gives people more affirming nicknames. Of course, once we pick their nickname, they're stuck with it as long as their session lasts. Right, Oh Blessed One?</p>
+<p>Each request has a current session. That session has it's own knowledge base that can be controlled with <code>http_session_assert</code>, <code>http_session_retractall</code>, and the obvious analogous calls, and queried with <code>http_session_data/1</code>.  It's elegant and easy.</p>
 <p>So, for our example, we'll check to see if we've given this person a nick. If we find one in their session data, great. </p>
 <div class='precode'><pre><code>nick_name(Nick) :-
     http_session_data(nick_name(Nick)),!.
@@ -481,7 +490,7 @@ Exercise: Run the server. Completely exit swipl and rerun the server. Confirm yo
 Exercise: Add another handler that lets you reset your nick without restarting the server. Use http_session_retractall to get rid of the old nick. Hint - you can just recurse into the handler to get the new one.
 </code></pre></div>
 <p>We won't cover it in this course, but you can control who gets a session. If you set the <code>http_set_session_options</code> create option to noauto you can  manually create sessions. If you want you can set the session lifetime. This can dramatically affect server memory if have a typical distribution of visitors, with many arriving at a single page and a few staying.</p>
-<p>You can also restrict which parts of your site cause a session to be created. This can be very useful for, say, an informational site that doesn't need sessions for most visitors, but raises funds by a small online store selling cafe press mugs and so on and needs sessions for the shopping cart.</p>
+<p>You can also restrict which parts of your site cause a session to be created. This can be very useful for, say, an informational site that doesn't need sessions for most visitors, but includes a small online store selling cafe press mugs and so on and needs sessions for the shopping cart.</p>
 <h2>5 Dispatching Revisited</h2>
 <p><a id='5'></a>
 I promised we'd revisit dispatching. </p>
@@ -602,7 +611,7 @@ Exercise: How would you make a 'site offline' function that the NOC staff could 
 </code></pre></div>
 <h3>6_3 Redirect</h3>
 <p>(no file)</p>
-<p>You're probably wondering what happened to redirects. If you're use to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redidirect, consider calling the handler of the page you're redirecting to. </p>
+<p>You're probably wondering what happened to redirects. If you're used to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redidirect, consider calling the handler of the page you're redirecting to. </p>
 <p>If you need a real redirect, use <a href="http://www.swi-prolog.org/pldoc/doc_for?object=http_redirect/3"><code>http_redirect/3</code></a></p>
 <h2>7 Including Resources</h2>
 <p><a id='7'></a>
@@ -763,6 +772,7 @@ query prolog_ide(thread_monitor).
 <div class='precode exercise'><pre><code>Exercise: query ?- prolog_ide(debug_monitor).
 Ooh and awe, then go read debug/1 and debug/3 docs
 </code></pre></div>
+<h4>Better Error Messages</p>
 <p>Loading <code>library(http/http_error.pl)</code>  causes uncaught exceptions in the server to generate a 500 error page with the error. (Remove this in production, it's never a good idea to give the hacker info about your system.) Most of the examples load this.</p>
 <h4>Paths</h4>
 <p>Abstract path locations can be confusing. You can check where they really resolve with <code>http_absolute_uri</code>.</p>
