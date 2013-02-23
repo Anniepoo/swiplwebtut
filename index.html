@@ -532,11 +532,8 @@ Test your code to make sure you get the same answers as before for the paths lis
 </code></pre></div>
 <h3>5_2 Handler ID's</h3>
 <p>There's no actual 5_2 file. </p>
-<p>Theres a joke that goes</p>
-<div class='precode'><pre><code>An engineer was confronted with 17 incompatible standards for representing some data. She thought, "I'll create a new standard that is a superset of the 17".
-9 months later an engineer is confronted with 18 standards for representing....
-</code></pre></div>
 <p>I think of this joke when I think of handler id's in swipl.</p>
+<p><img src="http://imgs.xkcd.com/comics/standards.png" title="Fortunately, the charging one has been solved now that we've all standardized on mini-USB. Or is it micro-USB? Shit." /></p>
 <p>We can represent a handler in many different ways:</p>
 <div class='precode'><pre><code>http://27.0.0.1:8080/f/bar
 /f/bar
@@ -571,9 +568,9 @@ Now move 1_3's other pages to different URI's without changing your new handler 
 <p><a id='6'></a></p>
 <h3>6_1 Serving Files</h3>
 <p>I hope by this point you're getting excited about swipl web!.  </p>
-<p>Maybe you're so excited you want to serve up the swipl owl!
-No?
-Well, you probably do have assets like this you want to serve up.</p>
+<p>Maybe you're so excited you want to serve up the swipl owl!</p>
+<p>No?</p>
+<p>Well, you probably do have assets like this you want to serve up.</p>
 <p>Fortunately, there's a canned handler that will serve files in a directory tree.</p>
 <div class='precode'><pre><code>:- http_handler(files(.), http_reply_from_files('assets', []), [prefix]).
 </code></pre></div>
@@ -587,12 +584,24 @@ Swipl has an abstract file path system - you've seen it when you include modules
 <p>Lastly, note the <code>prefix</code>. So everything under the assets directory will be served. Wow, just like we're Apache or something! Maybe not.</p>
 <p>Run the server and browse http://127.0.0.1:8080/f/swipl.png
 Congrats! The owl appears.</p>
+<p>One bit of security here. You don't want to serve something outside the served space, so need to prevent J Random Hacker from asking for <code>http://mysite.com/f/../../../etc/passwd</code> or some such. So, it's wise to use <code>http_safe_file/2</code> to sanitize file names. http_reply_file does the sanitizing for you.</p>
+<p>With finding files in various places and whatnot, interestingly, the swipl website's code to serve static assets is a good page long, much of it involved in displaying txt files by converting to html.</p>
 <p>Hey, what happens if you ask for the directory?</p><p>There's a kumquat in there!</p>
 <p>Gives a directory listing just like a real web server, even if it <em>is</em> in a language that's only used for AI. 
 And, for the record, you can make an index.html page just like normal</em>.</p>
+<p>The SWI-Prolog libraries define a few static file handlers - <code>css, js, and icon</code> are all
+defined already. You probably want to have those same handlers. Easy! Just add your directory to the
+file alias the library handler is already handling. If your css files are in <code>./files/css</code> under
+your project directory, you can just do:</p>
+<div class='precode'><pre><code>user:file_search_path(css, 'files/css').
+</code></pre></div>
+<p>Don't do this:</p>
+<div class='precode'><pre><code>user:file_search_path(css, root('files/css')).
+</code></pre></div>
+<p>because root's a URI path alias, not a file alias</p>
 <p>So, what happens if we ask for something that's not there?  Try http://127.0.0.1:8080/f/robot.png</p>
-<p>Hmm... that's not so good. Nasty error message.
-In a previous exercise we made a handler for everything else, but that responded with a page (a 200 response). Lets make a real 404.</p>
+<p>Hmm... that's not so good. Nasty error message.</p>
+<p>In a previous exercise we made a handler for everything else, but that responded with a page (a 200 response). Lets make a real 404.</p>
 <h3>6_2 404 response</h3>
 <p>When we can't do what we're asked, we fail. Can't serve a file at http://127.0.0.1:8080/f/robot.png, so we fail.</p>
 <div class='precode'><pre><code>serve_files(Request) :-
@@ -784,6 +793,9 @@ Ooh and awe, then go read debug/1 and debug/3 docs
 </code></pre></div>
 <p>Any call to <code>absolute_file_name</code> (under the covers of anything that uses abstract paths) generates debug output.</p>
 <p>If you just need to check one, use <code>file_search_path('some/path', Path)</code>. It's nondet, it'll give you all the possiblities.</p>
+<p>But the best trick is that a relative path passed to <code>edit/1</code> takes you to the handler it resolves to, which is nifty.</p>
+<div class='precode'><pre><code>?- edit('/wheres/this/go?kumquat=1').
+</code></pre></div>
 <h4>Where The Heck Am I?</h4>
 <p>Another handy thing to put in the top of a puzzling handler is <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.13%27,swi%28%27/doc/packages/http.html%27%29%29"><code>http_current_host</code></a>, whose last arg binds to the URI the server thinks it's serving.</p>
 <h4>Ouch, that hurt on 4000</h4>
