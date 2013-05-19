@@ -7,6 +7,7 @@
 <link href="style.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
+<p><a href="/swipltuts/">Home</a></p>
 <h1>Creating Web Applications in SWI-Prolog</h1>
 <p class='author'>Anne Ogborn</p>
 <p class='contents'>
@@ -190,7 +191,7 @@ It sounds like a job for... Paaa-Roooolloooooooooog....</p>
 <p><code>phrase</code>'s first argument is a library DCG, <code>html//1</code>, whose argument (in red) is a DSL (domain specific language) which defines the HTML it recognizes. So, phrase/2 will unify in the above when <code>TokenizedHtml</code> is the tokenized HTML equivalent of the html defined by the first arg.</p>
 <p>It is code in this DSL which is our 'termerized HTML'.</p>
 <h3>2_4 Proving it's a real DSL</h3>
-<p>Lets prove that it's a real DCG by abstracting out the generation into it's own nonterminal.</p>
+<p>Lets prove that it's a real DCG by abstracting out the generation into it's own nonterminal (See the file).</p>
 <div class='precode'><pre><code>my_nonterm --&gt;
 	html([html([head([title('Howdy')]),
 	           body([h1('A Simple Web Page'),
@@ -324,14 +325,25 @@ Exercise: Convert a simple web page (or part of one) into termerized HTML.
     another_inclusion(X),
     and_a_third_inclusion(X).
 </code></pre></div>
+<p>A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \</p>
+<p class='warning'>And, a caution. The list brackets for including a literal are not optional! <code>\['I end up in the emitted html']</code> and <code>\term</code> are completely different. The first puts <i>I end up in the emitted html</i> in the html. The second treats term as an inclusion.</p>
+<h4>Inclusion And Modules</h4>
 <p>If your inclusion is in another module, there's a syntax for finding it. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to explicitly specify the module. Further, there's an issue with the operator precedence, so the parens are necessary</p>
 <div class='precode'><pre><code>\(othermodule:inclusion(X))
 </code></pre></div>
-<p>If you make code that passes termerized html around, and then attempts to call semantic arguments within it, you may need <code>meta_predicate/1</code> to end up in the right module. Here be dragons.</p>
-<p>Finally, if you create something that takes termerized HTML as an argument, and want it properly color highlighted, use <code>html_meta/1</code>.</p>
-<p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, in particular <code>meta_predicate</code> and how inclusion works.</p>
-<p>A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \</p>
-<p class='warning'>And, a caution. The list brackets for including a literal are not optional! <code>\[...]</code> and <code>\term</code> are completely different.</p>
+<p>If you make code that passes termerized html around, and then attempts to call semantic arguments within it, you may need <code>meta_predicate/1</code> to end up in the right module. Here be dragons. Fortunately there's an extension to meta_predicate that handles html. <code>html_meta</code> works like meta_predicate, but allows html as well as the usual ?, +, -, etc.</p>
+<div class='precode'><pre><code>:- html_meta  my_inclusion(+,html,?,?).
+
+my_inclusion(A, B) -->
+    html(p('I treat A as a number ~d'-[A]),
+    html(p('i appear in the middle')),
+    html(B),
+    html(p('i appear at the end')).
+    
+</code></pre></div>
+<p>my_inclusion takes termerized HTML as it's two arguments. The html_meta declaration ensures that a call to my_inclusion from another module will have any inclusions in the second argument wrapped with the proper module. Additionally, the pceEmacs editor will properly syntax color the argument.</p>
+<p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, in particular <code>meta_predicate</code>, <code>meta_html</code>, and how inclusion works.</p>
+
 <p>At this point our exercises start building on each other. You may want to copy one of the examples to create a starting point.</p>
 <div class='precode exercise'><pre><code>Exercise: Create a simple web page with a form that does a GET to gather a message. You needn't build anything to handle the form.
 
@@ -620,7 +632,7 @@ Exercise: How would you make a 'site offline' function that the NOC staff could 
 </code></pre></div>
 <h3>6_3 Redirect</h3>
 <p>(no file)</p>
-<p>You're probably wondering what happened to redirects. If you're used to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redidirect, consider calling the handler of the page you're redirecting to. </p>
+<p>You're probably wondering what happened to redirects. If you're used to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redirect, consider calling the handler of the page you're redirecting to. </p>
 <p>If you need a real redirect, use <a href="http://www.swi-prolog.org/pldoc/doc_for?object=http_redirect/3"><code>http_redirect/3</code></a></p>
 <h2>7 Including Resources</h2>
 <p><a id='7'></a>
@@ -644,6 +656,26 @@ Well, we can serve files, now lets get them included in our web pages.</p>
                          href(URL)
                        ])).
 </code></pre></div>
+<p>There is an implied html_receive(head) in reply_html_page. This is very useful for sending random things to the head.</p>
+<p>A common situation is dealing with ugly hacks to get around IE borkedness. Here's a mess I needed for a Leaflet map:</p>
+<div class='precode'><pre><code>
+&lt;!--[if lte IE 8]&gt;
+&lt;link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css"&gt;
+&lt;![endif]--&gt;
+</code></pre></div>
+ <p>The way to handle this is to use <code>\[...]</code> and mailman</p>
+ <div class='precode'><pre><code>
+ 	html([
+	      \html_requires(leaflet),
+	      \html_post(head,
+            \if_ie('lte IE 8',
+                      link([ rel(stylesheet),
+                        href('http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css')
+                      ]))),
+              div([ id(ID)
+             ],
+             [])]),
+ </code></pre></div>
 <h3>7_2 Including Resources With <code>html_resource</code></h3>
 <p>This material is described in the <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.20%27,swi%28%27/doc/packages/http.html%27%29%29">swipl doc for resources</a></p>
 <p>Looking at 7_1, a few defects of the method come to mind</p>
@@ -681,7 +713,7 @@ and monitor in the debug message window.</p>
 <p><a id='8'></a></p>
 <p>authentication, cors, openid</p>
 <p>This is a work in progresss. This chapter is still TODO.</p>
-<p>But know that you can deal with cross site resources, basic authentication, and OpenID.</p>
+<p>But know that you can deal with cross site resources, basic authentication, and OpenID via SWI libraries.</p>
 <h2>9 Running The Server</h2>
 <p><a id='9'></a></p>
 <h3>9_1 Server Top Level</h3>
@@ -691,7 +723,7 @@ and monitor in the debug message window.</p>
         http_server(http_dispatch, [port(Port)]).
 </code></pre></div>
 <p>Jan writes about 'three ways' to run the server.</p>
-<p><code>inetd</code>, a unix daemon that handles the outer network interface, requires starting the prolog server separately for each invokation, and isn't really an option for serious work.</p>
+<p><code>inetd</code>, a unix daemon that handles the outer network interface, requires starting the prolog server separately for each invocation, and isn't really an option for serious work.</p>
 <p>The XPCE based server receives XPCE events for incoming requests. It's not multithreaded, and it's only advantage is that debugging is slightly easier in a single threaded enviornment.</p>
 <p>For serious use, the multi-threaded <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.11.2%27,swi%28%27/doc/packages/http.html%27%29%29"><code>http_server</code></a> is the only reasonable choice.</p>
 <div class='precode exercise'><pre><code>Exercise: Using the link above for http_server, answer the following questions:
@@ -742,22 +774,12 @@ A great quote from the swipl docs</p>
 <h3>10_2 Slightly Sick System</h3>
 <p>(no file)</p>
 <p>Are you in startup mode, or an experimental or 'fooling around' project? Want to save writing a back end? Here's a trick that's completely reasonable and saves half your dev time.</p>
-<p>Simply use the prolog kb as your data structure. Make a thread that creates a resource file of the program every nn seconds, using <a href="http://www.swi-prolog.org/pldoc/man?predicate=qsave_program%2f2"><code>qsave_program/2</code></a>. Don't forget to use the <code>goal</code> option so it knows how to restart the server. Note that you do <em>not</em> want the emulator written (you aren't making a standalone). To restore call <a href="http://www.swi-prolog.org/pldoc/man?predicate=open_resource%2f3"><code>open_resource/3</code></a>. </p>
-<p>If that seems too extreme, you can just snapshot the data. Of course you have to worry about consistency issues, so this can be messy. But if you have some things to persist it goes like this:</p>
-<div class='precode'><pre><code>persist :-
-    repeat,
-    member(Head, [user(_,_,_,_), blog_post(_,_), ... and so on ...]),
-    clause(Head, _, Reference), % call +, -, - to get a ref from template
-    clause(AHead, ABody, Reference), % call -, - , + to get head and body
-    format(PersistStream, '~q :- ~q .~n', [AHead, ABody]),
-    fail.
-persist.
+<p>Simply use the prolog persistancy lib to snapshot your data. See <a href="http://www.swi-prolog.org/pldoc/doc/swi/library/persistency.pl"><code>persistance/1</code></a> </p>
 
-Exercise: Implement one of these two schemes for a small example.
+<div class='precode exercise'><pre><code>
+Exercise: Implement a toy application using the persistancy lib.
 </code></pre></div>
-<p>Or, if you want, just</p>
-<div class='precode exercise'><pre><code>Exercise: Call qsave_progam on your largest (in terms of memory) prolog program and time it
-</code></pre></div>
+
 <h3>10_3 NoSQL</h3>
 <p>(no file)
 How about using a database, but lowering the impedence bump between prolog's representation and the external DB?  Some options</p>
