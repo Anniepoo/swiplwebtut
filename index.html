@@ -9,7 +9,8 @@
 <body>
 <p><a href="/swipltuts/">Home</a></p>
 <h1>Creating Web Applications in SWI-Prolog</h1>
-<p class='author'>Anne Ogborn</p>
+<p class='author'>Anne Ogborn</p><p class='author'>Revised 5/19/2013</p>
+
 <p class='contents'>
 <a href='#intro'>Introduction</a>
 <a href='#1'>1 Setting Up Handlers</a>
@@ -26,14 +27,21 @@
 <a href='#12'>12 Security</a></p>
 <h2>Introduction</h2>
 <a id='intro'></a>
+<h3>Expected Results</h3>
+<p>If you enter this course knowing SWI-Prolog well and have some experience with web development, you should be able to competently write production web applications afterwards. The learning curve is pleasantly short.</p>
+<h3>Time</h3>
+<p>3-6 hours if you do all the exercises. You can start writing 'real' code after finishing section 3 at minimum.</p>
 <h3>Who This Course Is For</h3>
-<p>This course is for anyone who knows swi-Prolog reasonably well and wants to learn the web application framework bundled with swi-Prolog.</p>
+<p>This course is for anyone who knows SWI-Prolog reasonably well and wants to learn the web application framework bundled with SWI-Prolog. You will also need some fluency with web development basics like HTML, CSS, and HTTP.</p>
 <p>Many programmers assume Prolog needs to be hosted with a 'normal' language. I'm not sure why. Certainly xpce wouldn't be suitable for many desktop gui systems. But those are becoming rare. Even the desktop systems I've written recently have been written as web servers that display the UI in the browser. This course is part of my response to this mentality.</p>
 <h3>Why Prolog?</h3>
 <p>Prolog is of course more associated with expert systems and torturing undergraduates than with production web applications. But I've found it an excellent system for building web applications as well.</p>
 <p>Prolog programs are simply <em>smaller</em>. Prolog programs are often <em>one tenth</em> the size of equivalent Java programs. And smallness is a virtuous cycle. Smallness encourages well written code, and well written code is easier to maintain and refactor and remains small.</p>
 <p>What makes Prolog systems small? Complex question, but we can identify various factors. With backtracking instead of control structures, Prolog eliminates the 90% of loops that are actually iterators. Backtracking often eliminates error handling. Partial binding and incomplete structures eliminate much data reformatting. And in general, there's just a lot more case based reasoning, which means a lot less ceremony associated with handling of edge conditions. And of course you can put a small reasoner in to figure out complex business logic like 'who'se allowed to edit this?'</p>
 <p>The swipl web app framework is very friendly. You can edit running code and query make. (C-c C-m in the IDE editor) and keep going without disturbing state, and you can use the graphic debugger.</p>
+<h3>Does Anybody Actually Use This?</h3>
+<p>All these systems are in Prolog, using the web framework described in this tutorial.</p>
+<p><img src="systemsusingprolog.png" title="The best way to be cool and ahead of the curve is by making sure large companies are using the technology before you try it" /></p>
 <h3>Getting The Most From This Course</h3>
 <p>This course is this web page and a series of example programs. </p>
 <p>The examples are designed to take reasonable sized bites at a subject, progressively building knowledge. I introduce some subjects in one place, then revisit them later to deepen understanding.</p>
@@ -173,12 +181,13 @@ http:location(files, '/f', []).
 <div class='precode exercise'><pre><code>Exercise: Run 2_2 and look at the generated HTML.
 </code></pre></div>
 <h3>2_3 html//1 And Termerized HTML</h3>
-<p class='warning'>A word of warning. If you never really got comfortable with DCG's, stop right now and go get comfy. Welcome back -- nice bunny slippers.</p>
-<p>OK, Annie, get on with it.
-Finally, we see something that looks like reasonable HTML generation.</p>
+<p><img src="comfy.png" style="float: left; margin-right: 12px" title="He's just read my DCG tutorial, that's why he looks like that"/></p>
+<p>Finally, we see something that looks like reasonable HTML generation.</p>
 <p>Web pages are inherently nested structures of boxes within boxes and areas on a page. While they have a strong structural similarity to their HTML representation,
-they are not identical. A search box is not, conceptually, just a text field, but is a thing unto itself. Representing the page&apos;s structure and converting it to HTML sounds like a job for a language with good parsing and language transformation skills.
-It sounds like a job for... Paaa-Roooolloooooooooog....</p>
+they are not identical. A search box is not, conceptually, just a text field, but is a thing unto itself. Representing the page&apos;s structure and converting it to HTML sounds like a job for a language with good parsing and language transformation skills.</p>
+<p>It sounds like a job for...</p>
+<p>Paaa-Roooolloooooooooog....</p>
+<div style="clear:both">&nbsp;</div>
 <p>At any rate, it's a reasonable thing to do with DCG's, and that's what swipl does, in a sorta sideways way. Here's an example:</p>
 <div class='precode'><pre><code>    phrase(
         html(<font color="#FF4444">html(
@@ -193,13 +202,13 @@ It sounds like a job for... Paaa-Roooolloooooooooog....</p>
 <h3>2_4 Proving it's a real DSL</h3>
 <p>Lets prove that it's a real DCG by abstracting out the generation into it's own nonterminal (See the file).</p>
 <div class='precode'><pre><code>my_nonterm --&gt;
-	html([html([head([title('Howdy')]),
-	           body([h1('A Simple Web Page'),
-		      p('With some text')])])]).
+    html([html([head([title('Howdy')]),
+               body([h1('A Simple Web Page'),
+              p('With some text')])])]).
 
 </code></pre></div>
 <h3>2_5 reply_html_page</h3>
-<p>Generating our own head and body tags is more ceremony than we really need. swipl provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.</p>
+<p>Generating our own head and body tags is more ceremony than we really need. SWI-Prolog provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.</p>
 <div class='precode'><pre><code>say_hi(_Request) :-
     reply_html_page(
        [title('Howdy')],
@@ -328,11 +337,13 @@ Exercise: Convert a simple web page (or part of one) into termerized HTML.
 <p>A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \</p>
 <p class='warning'>And, a caution. The list brackets for including a literal are not optional! <code>\['I end up in the emitted html']</code> and <code>\term</code> are completely different. The first puts <i>I end up in the emitted html</i> in the html. The second treats term as an inclusion.</p>
 <h4>Inclusion And Modules</h4>
+<p><img src="comfymodule-01.png" style="float: left; margin-right: 12px" title="His coffee's gone cold" /></p>
 <p>If your inclusion is in another module, there's a syntax for finding it. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to explicitly specify the module. Further, there's an issue with the operator precedence, so the parens are necessary</p>
-<div class='precode'><pre><code>\(othermodule:inclusion(X))
+<div class='precode' style='float:left'><pre><code>\(othermodule:inclusion(X))
 </code></pre></div>
+<p>&nbsp;</p>
 <p>If you make code that passes termerized html around, and then attempts to call semantic arguments within it, you may need <code>meta_predicate/1</code> to end up in the right module. Here be dragons. Fortunately there's an extension to meta_predicate that handles html. <code>html_meta</code> works like meta_predicate, but allows html as well as the usual ?, +, -, etc.</p>
-<div class='precode'><pre><code>:- html_meta  my_inclusion(+,html,?,?).
+<div class='precode' style='float:left'><pre><code>:- html_meta  my_inclusion(+,html,?,?).
 
 my_inclusion(A, B) -->
     html(p('I treat A as a number ~d'-[A]),
@@ -341,9 +352,10 @@ my_inclusion(A, B) -->
     html(p('i appear at the end')).
     
 </code></pre></div>
-<p>my_inclusion takes termerized HTML as it's two arguments. The html_meta declaration ensures that a call to my_inclusion from another module will have any inclusions in the second argument wrapped with the proper module. Additionally, the pceEmacs editor will properly syntax color the argument.</p>
-<p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, in particular <code>meta_predicate</code>, <code>meta_html</code>, and how inclusion works.</p>
-
+<p style='clear:left'>&nbsp;</p>
+<p><code>my_inclusion</code> takes termerized HTML as it's two arguments. The html_meta declaration ensures that a call to my_inclusion from another module will have any inclusions in the second argument wrapped with the proper module. Additionally, the pceEmacs editor will properly syntax color the argument.</p>
+<p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, <code>meta_predicate</code>, <code>meta_html</code>, and how inclusion works.</p>
+<h4>Start A Project</h4>
 <p>At this point our exercises start building on each other. You may want to copy one of the examples to create a starting point.</p>
 <div class='precode exercise'><pre><code>Exercise: Create a simple web page with a form that does a GET to gather a message. You needn't build anything to handle the form.
 
@@ -381,8 +393,8 @@ user:body(tut_style, Body) --&gt;
                   ])).
 </code></pre></div>
 <p>Observation here - what's coming in is <em>tokenized</em> HTML.</p>
-<p>You can do the same thing with the head. Add a hook predicate for user:head. This is a possible, but rarely the best, method of including Javascript and CSS. </p>
-<p>Of course you can have more than one style. At UH HHP we use one style for content to be viewed on the web and one style for content to be viewed in the virtual world.</p>
+<p>You can do the same thing with the head. Add a hook predicate for user:head. This is a possible, but rarely the best, method of including Javascript and CSS. More often, it's a great way to get things like the title and keywords set up.</p>
+<p>Of course you can have more than one style. At my employer we use one style for content to be viewed on the web and one style for content to be viewed in the virtual world.</p>
 <div class='precode exercise'><pre><code>Exercise: Add a header and footer to your web page from the exercises in 2_6 using body styling. 
 </code></pre></div>
 <h3>2_8 Mailman</h3>
@@ -394,73 +406,77 @@ that ultimately ends up somewhere besides where you generated it</p>
 <p>Early version - not like the example file</p>
 <div class='precode'><pre><code>
 page_content(_Request) -->
-	html(
-	   [
-	    h1('Demonstrating Mailman'),
-	    div(\nav_bar),
-	    p('The body goes here')
-	   ]).
+    html(
+       [
+        h1('Demonstrating Mailman'),
+        div(\nav_bar),
+        p('The body goes here')
+       ]).
        
 nav_bar -->
-	{
-	    findall(Name, nav(Name, _), ButtonNames),
-	    maplist(as_top_nav, ButtonNames, TopButtons)
-	},
-	html(TopButtons).
+    {
+        findall(Name, nav(Name, _), ButtonNames),
+        maplist(as_top_nav, ButtonNames, TopButtons)
+    },
+    html(TopButtons).
 </code></pre></div>
-<p>The web designer notices that many of our pages get long, and wants to add a small type version of the navigation at the bottom.
-We already have the list of buttons, can we avoid duplicating that code?</p>
+<p>The web designer notices that many of our pages get long, and wants to add a small type version of the navigation at the bottom.</p>
+<p><img src="addfooter-01.png" title="No, I don't know what a web empowerer is. Neither do they, but they're funded through Q4 of next year."></p>
+<p>We already have the list of buttons when we make the top menu. Can we avoid duplicating the work of making the list for the bottom?</p>
 <p>Mailman allows us to generate tokenized HTML in one place and 'mail' it to another</p>
-<p>2_8 sends the bottom buttons to the bottom with</p>
+<p>File 2_8 sends the bottom buttons to the bottom with</p>
 <div class='precode'><pre><code>\html_post(bottom_nav, BottomButtons)
 </code></pre></div>
 <p>and receives them with</p>
 <p><code>div(\html_receive(bottom_nav))</code></p>
 <div class='precode'><pre><code>
 page_content(_Request) -->
-	html([
-	    h1('Demonstrating Mailman'),
-	    div(\nav_bar),
-	    p('The body goes here'),
-	    div(\html_receive(bottom_nav))
-	   ]).
+    html([
+        h1('Demonstrating Mailman'),
+        div(\nav_bar),
+        p('The body goes here'),
+        div(\html_receive(bottom_nav))
+       ]).
 
 nav_bar -->
-	{
+    {
     % we only need to find the ButtonNames once
-	    findall(Name, nav(Name, _), ButtonNames),
-	    maplist(as_top_nav, ButtonNames, TopButtons),
-	    maplist(as_bottom_nav, ButtonNames, BottomButtons)
-	},
-	html([\html_post(bottom_nav, BottomButtons) | TopButtons]).
+        findall(Name, nav(Name, _), ButtonNames),
+        maplist(as_top_nav, ButtonNames, TopButtons),
+        maplist(as_bottom_nav, ButtonNames, BottomButtons)
+    },
+    html([\html_post(bottom_nav, BottomButtons) | TopButtons]).
 </code></pre></div>
-<p>A common reason to do this a page element that in turn requires something in the head, say a
-widget that requires an extra css or js file. Another common reason is an element
+<p>A common reason to do this is a page element that in turn requires something in the head, say a
+widget that depends on a css or js file. Another common reason is an element
 (say a list of blog posts)
-whose contents are accumulated during page generation</p>
-<p>Mailman is a useful tool. However, be aware, it doesn't know about modules and gets expanded elsewhere. You need to use the <code>\(module:name(args))</code> form for any inclusions you mail.</p>
+whose contents are accumulated during page generation, and a set of links to them near the top of the page.</p>
+<p>Mailman is a useful tool. However, be aware, it doesn't know about modules and gets expanded elsewhere. You need to use the <code>\(module:name(args))</code> form for any inclusions you mail. (rumored fixed, 5/19/2013 AO)</p>
 <div class='precode exercise'><pre><code>Exercise: Add an inclusion call to your page that takes an argument which is displayed in the page title.
 </code></pre></div>
 <h2>3 Handling Parameters</h2>
 <p><a id='3'></a></p>
 <p>By now you're probably itching to make something real. With parameters, we can start getting dynamic.</p>
 <h3>3_1 <code>http_parameters</code></h3>
+<img src="snake-handlers.jpg" title="Django dev. Bitten by an implicit join 30 seconds after this picture was taken. Has no problem handling parameters in SWI-Prolog." style="float:left; margin-right: 12px" />
 <p>This section is about the pred http_parameters, documented at <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.9%27,swi%28%27/doc/packages/http.html%27%29%29">this page</a>. </p>
 <p>The documentation is actually quite good, so I'm going to refer you there for parameter handling, but tell you about some gotchas.</p>
 <p>Gotcha #1: If a parameter is missing or invalid it doesn't fail, it throws an exception. 
 This means you need a catch block around your code. In my own code I've written a http_parameters_quietly that wraps the exception and fails.</p>
 <p>Gotcha #2: POST requests where the body has query string syntax aren't available without the form_data option.</p>
+<p style="clear:left">&nbsp;</p>
 <h3>3_2 Handling POST requests</h3>
 <p>POST is often used to send large chunks of data not in search string format. Example 3_2 demonstrates directly reading the 
 data POSTed by a web form.</p>
-<p>Contrary to the statement at the top of the page, POST requests are not transparently handled. If you're handling a POST request 
+<p>Contrary to the statement at the top of the SWI-Prolog page, POST requests are not transparently handled. If you're handling a POST request 
 you'll need to add <code>form_data</code> option to the <code>http_parameters/3</code> form. Additionally, the code apparently 
 reads the POST data once, and can't backtrack.  3_2 demonstrates handling POST data.</p>
 <p>A semi-useful tool for websites that shove many of the same parameters around is the <code>attribute_declarations</code> option. This allows you to define how to validate various parameters in one place.</p>
 <p>Another useful gem is <code>http:request_expansion</code>. This lets you 'decorate' the request. For example, if you want some common data from a database attached to most requests, you could just have <code>request_expansion</code> decorate it.</p>
+<p>Skipping ahead a bit, the session data is in the request structure and covers most uses of request_expansion.</p>
 <p>Finally, you'll soon tire of passing Request around. You can get the current Request object with <code>http_current_request.</code></p>
 <div class='precode exercise'>
-Exercise: Create a landing page for your web form from past exercises.
+Exercise: Create a landing page for the web form you made in 'inclusion and modules'.
 </code></pre></div>
 <h3>3_3 File Upload</h3>
 <p>This example is taken in it's entirety from <a href="http://www.swi-prolog.org/howto/http/FileUpload.html">The swipl docs for uploading files</a></p>
@@ -470,12 +486,12 @@ Exercise: Create a landing page for your web form from past exercises.
 <p><a id='4'></a></p>
 <h3>4_1 Basic Session Usage</h3>
 <p>At this point you're probably fantasizing about all the stuff you can make in swipl web, but you know you're going to have to track sessions.</p>
-<p>Implementing session control is insanely simple.</p>
+<p>Implementing session control is insanely simple. More fun than <a href="http://xkcd.com/353/" target="_new">Python</a>.</p>
 <div class='precode'><pre><code>:- use_module(library(http/http_session)).
 </code></pre></div>
 <p>Wait, no, cmon, it can't be that simple!</p>
 <p>Yup. It is. You got sessions.</p>
-<p>You know that loveable school/military/fascist youth camp tradition of giving people horrible nicknames? Ones they could never change? You didn't find it loveable? Me neither.
+<p>You know that lovable school/military/fascist youth camp tradition of giving people horrible nicknames? Ones they could never change? You didn't find it lovable? Me neither.
 Lets build a site that gives people more affirming nicknames. Of course, once we pick their nickname, they're stuck with it as long as their session lasts. Right, Oh Blessed One?</p>
 <p>Each request has a current session. That session has it's own knowledge base that can be controlled with <code>http_session_assert</code>, <code>http_session_retractall</code>, and the obvious analogous calls, and queried with <code>http_session_data/1</code>.  It's elegant and easy.</p>
 <p>So, for our example, we'll check to see if we've given this person a nick. If we find one in their session data, great. </p>
@@ -497,7 +513,8 @@ nick_list([
       ]).
 
 
-Exercise: Run the server. Completely exit swipl and rerun the server. Confirm you can get a different name this way.
+Exercise: Run the server. Reload the page several times. 
+Completely exit swipl and rerun the server. Confirm you can get a different name this way.
 
 Exercise: Add another handler that lets you reset your nick without restarting the server. Use http_session_retractall to get rid of the old nick. Hint - you can just recurse into the handler to get the new one.
 </code></pre></div>
@@ -540,7 +557,7 @@ http://127.0.0.1:8000/hoops   (hoops isn't valid)
 </code></pre></div>
 <p>And another one</p>
 <div class='precode exercise'><pre><code>Exercise: Provide yourself a nice error message instead of 404ing in response to an invalid path (hint, you need to complete the universe of paths).
-Test your code to make sure you get the same answers as before for the paths listed in the previous exercise.
+Test your code to make sure you get the same answers as before for some of the paths listed in the previous exercise.
 </code></pre></div>
 <h3>5_2 Handler ID's</h3>
 <p>There's no actual 5_2 file. </p>
@@ -579,6 +596,7 @@ Now move 1_3's other pages to different URI's without changing your new handler 
 <h2>6 Handlers Revisited</h2>
 <p><a id='6'></a></p>
 <h3>6_1 Serving Files</h3>
+<img src="assets/swipl.png" style="float:left; margin-right: 12px" />
 <p>I hope by this point you're getting excited about swipl web!.  </p>
 <p>Maybe you're so excited you want to serve up the swipl owl!</p>
 <p>No?</p>
@@ -593,7 +611,7 @@ Swipl has an abstract file path system - you've seen it when you include modules
 <div class='precode'><pre><code>:- use_module(library(http/html_write)).
 </code></pre></div>
 <p><code>library</code> is an abstract file location.</p>
-<p>Lastly, note the <code>prefix</code>. So everything under the assets directory will be served. Wow, just like we're Apache or something! Maybe not.</p>
+<p>Lastly, note the <code>prefix</code>. So everything under the assets directory will be served. Wow, just like we're Apache or something! Maybe not. Can't make a living maintaining SWI-Prolog config files.</p>
 <p>Run the server and browse http://127.0.0.1:8080/f/swipl.png
 Congrats! The owl appears.</p>
 <p>One bit of security here. You don't want to serve something outside the served space, so need to prevent J Random Hacker from asking for <code>http://mysite.com/f/../../../etc/passwd</code> or some such. So, it's wise to use <code>http_safe_file/2</code> to sanitize file names. http_reply_file does the sanitizing for you.</p>
@@ -665,9 +683,9 @@ Well, we can serve files, now lets get them included in our web pages.</p>
 </code></pre></div>
  <p>The way to handle this is to use <code>\[...]</code> and mailman</p>
  <div class='precode'><pre><code>
- 	html([
-	      \html_requires(leaflet),
-	      \html_post(head,
+     html([
+          \html_requires(leaflet),
+          \html_post(head,
             \if_ie('lte IE 8',
                       link([ rel(stylesheet),
                         href('http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css')
