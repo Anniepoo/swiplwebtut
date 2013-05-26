@@ -41,7 +41,7 @@
 <p>The swipl web app framework is very friendly. You can edit running code and query make. (C-c C-m in the IDE editor) and keep going without disturbing state, and you can use the graphic debugger.</p>
 <h3>Does Anybody Actually Use This?</h3>
 <p>All these systems are in Prolog, using the web framework described in this tutorial.</p>
-<p><img src="systemsusingprolog.png" title="The best way to be cool and ahead of the curve is by making sure large companies are using the technology before you try it" /></p>
+<p><img src="systemsusingprolog.png" title="The best way to be cool and ahead of the curve is by asking if large companies are using the technology before you try it" /></p>
 <h3>Getting The Most From This Course</h3>
 <p>This course is this web page and a series of example programs. </p>
 <p>The examples are designed to take reasonable sized bites at a subject, progressively building knowledge. I introduce some subjects in one place, then revisit them later to deepen understanding.</p>
@@ -58,16 +58,13 @@
 <p>The example programs are labelled with the chapter and section number, so webserver1_2.pl is the code for chapter one section 2.</p>
 <p>Different people will have different backgrounds and learning styles. Whatever works for you works.</p>
 <p><a href='http://www.swi-prolog.org/howto/http/'>This page</a> in the swipl docs is useful as well</p>
-<h3>Getting Stuck</h3>
+<h4>Getting Stuck</h4>
 <p>If you have questions and reasonable effort doesn't answer them, drop me email at aogborn (somechar) uh.edu. Please, if you're taking a beginning Prolog course, ask your instructor. Questions about family trees will be ignored. But if you're working on a web app, feel free.</p>
 <p>Asking on ##Prolog on freenode.net is also a good way to get answers.</p>
 <p>Finally, I well could be wrong. This material's not that well documented in spots, and I'm making these tutorials partly to teach myself. While the web app <em>feels</em> nice to handle, in practice I've had a frustrating number of wtf moments. I'm hoping this tutorial will help change that.</p>
-<h4>Giving Back</h4>
-<p>I was going to make some 'create a blog' fake project for the course, but realized that was a waste of good programming talent. Instead of having a useless project, I thought I'd invite  everyone who takes it contribute a piece to an opensource library. It's not a requirement, if you have a specific project of your own, feel free to do that. But if you're taking this course and want an under-a-day little project to cement your knowledge, maybe this is the thing for you.</p>
-<p>I don't like big, monolithic libraries. It's frustrating to discover you have to accept a big memory hit and a bunch of painful setup to get one cool little bit. So I'm making a set of small, mostly independent tools.</p>
-<p>I'm calling it <em>Weblog</em> a library that makes common web interaction patterns easier.</p>
-<p>If you're up for it, head over to <a href="http://www.welie.com/patterns/index.php">Welie.com</a> and find yourself a pattern you like. It shouldn't be on the list below (those are done). </p>
-<p>(This is the list - it's empty now).</p>
+<h4>Learning By Doing</h4>
+<p>The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage
+you to make a project with the SWI tools. At the end of the course there's a plea for people to help with a library of web patterns. If you don't have a specific project, you might consider doing that.</p>
 <h2>1 Setting Up Handlers</h2>
 <p><a id='1'></a></p>
 <h3>1_1 Hello Web</h3>
@@ -91,7 +88,16 @@
 <p>The first argument, /, is an atom that means 'the root of the URI'. So if we instead wanted our server to serve http://127.0.0.1:8000/twinkly/elf/weenblat.xls we'd say</p>
 <div class='precode'><pre><code>:- http_handler('/twinkly/elf/weenblat.xls', say_hi, []).
 </code></pre></div>
-<p>The second argument will be called with <code>call(Arg, Request)</code>, where Request is the request info. This enables the handy trick of making similar handlers a single block of code with specialization.</p>
+<p>The second argument will be called with <code>call(Arg, Request)</code>, where Request is the request info. This enables the handy trick of making similar handlers into a single pred with specialization, like this:</p>
+<div class='precode'><pre><code>:- http_handler('/something/pleasant', my_handler_code(pleasant), []).
+:- http_handler('/something/painful', my_handler_code(painful(normal)), []).
+:- http_handler('/something/very/painful', my_handler_code(painful(very)), []).
+:- http_handler('/something/incredibly/painful', my_handler_code(painful(incredibly)), []).
+
+my_handler_code(WhatToSay, Request) :-
+         .... in here WhatToSay will be bound to pleasant, painful(normal), painful(very), or painful(incredibly)
+         ... and Request is a complex term that represents the httprequest (covered later)
+</code></pre></div>
 <p>The last argument is a set of options. The most interesting of these is <code>prefix</code>, which lets a single handler handle everything below the route as well. More about handler options in the section on serving asset files.</p>
 <p>Now we're ready for the actual handler rule.</p>
 <p>When the rule is called the current input stream has been redirected to read the HTTPRequest, and current output has been redirected out the socket, so all we need do is print the response. </p>
@@ -129,15 +135,19 @@ http:location(files, '/f', []).
 <p>A warning of a confusing point. I was tryig to make these 'abstract paths' be abstract files paths for a long time when learning this stuff. Beware, the two have nothing to do with each other. To make things worse, later on we'll encounter them used together.</p>
 <div class='precode exercise'><pre><code>Exercise: Add a handler that says 'sorry, not here' to 1_3 when you try something like http://127.0.0.1:8000/this/is/invalid
 </code></pre></div>
-<p>A final note. Remember that your server will some day probably be proxied to by apache, so your root path may be changed. This is an excellent reason to use abstract paths. If you have many abstract paths you can redefine http:prefix to change everything at once.</p>
+<p>A final note. Remember that your server will some day probably be proxied to by apache, so your root path may be changed. You can change all abstract paths at once by redefining http:prefix.</p>
 <h2>2 Generating HTML</h2>
 <p><a id='2'></a></p>
 <p>So far we've served plain text. Lets serve HTML.</p>
-<p>This is the largest chapter in the tutorial. It's oriented towards the built in swipl HTML generation support. I know that there are two camps when it comes to HTML generation.</p>
+<p>This is the longest chapter in the tutorial. I'm approaching it from the bottom up, so don't panic until 2_3 if the HTML generation looks ugly.</p>
+<h4>Two Camps</h4>
+<p>There are two camps when it comes to HTML generation.</p>
+<p><img src="twocamps-01.png" /></p>
 <p>The 'template' camp wants to edit HTML with normal HTML tools, and will live with awkward php/jsp/asp style <code>&lt;% .... %&gt;</code> escaping for dynamic generation.</p>
-<p>The dynamic camp wants to dynamically generate web pages, and will live with 'funny looking' HTML to do that. </p>
-<p>The built in generation is firmly in the 'dynamic' camp. If you pitch your tent in the template camp, look at <a href="http://www.cs.otago.ac.nz/staffpriv/ok/pwp.pl">PWP</a>. Swipl provides support for <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.21%27,swi%28%27/doc/packages/http.html%27%29%29">integrating PWP</a>.</p>
-<p>That said, you can indeed output a block of 'normal' HTML. Some strategies for doing so (skipping ahead a bit):</p>
+<p>The dynamic camp wants to dynamically generate web pages, and will live with an idiomatic 'funny looking' HTML representation for the convenience of mixing code and HTML easily.</p>
+<p>This chapter is about the built in swipl HTML generation support, which is firmly in the 'dynamic' camp.</p>
+<p>If you pitch your tent in the template camp, look at <a href="http://www.cs.otago.ac.nz/staffpriv/ok/pwp.pl">PWP</a>. Swipl provides support for <a href="http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.21%27,swi%28%27/doc/packages/http.html%27%29%29">integrating PWP</a>.</p>
+<p>That said, you can indeed output a block of 'normal' HTML with the built-in support. Some strategies for doing so (skipping ahead a bit):</p>
 <ul><li>Include bits of 'normal' HTML in an otherwise dynamic page by using the inclusion mechanism described under 'inclusion' in 2_6</li>
 <li>Serve entire static pages (eg. a terms of service page) using the file serving mechanisms described in 6_1</li>
 </ul>
@@ -183,12 +193,11 @@ http:location(files, '/f', []).
 <h3>2_3 html//1 And Termerized HTML</h3>
 <p><img src="comfy.png" style="float: left; margin-right: 12px" title="He's just read my DCG tutorial, that's why he looks like that"/></p>
 <p>Finally, we see something that looks like reasonable HTML generation.</p>
-<p>Web pages are inherently nested structures of boxes within boxes and areas on a page. While they have a strong structural similarity to their HTML representation,
-they are not identical. A search box is not, conceptually, just a text field, but is a thing unto itself. Representing the page&apos;s structure and converting it to HTML sounds like a job for a language with good parsing and language transformation skills.</p>
-<p>It sounds like a job for...</p>
-<p>Paaa-Roooolloooooooooog....</p>
+<p>Web pages are nested structures of boxes within boxes and areas on a page. While they have a strong structural similarity to their HTML representation,
+they are not identical. A search box is not, conceptually, just a text field, but is a thing unto itself.</p>
+<p>Representing the <i>page&apos;s</i> structure and converting it to a list of HTML chunks is list generation, and there's a natural tool in Prolog for list generation - the DCG.</p>
 <div style="clear:both">&nbsp;</div>
-<p>At any rate, it's a reasonable thing to do with DCG's, and that's what swipl does, in a sorta sideways way. Here's an example:</p>
+<p>That's what swipl does, in a sorta sideways way. Here's an example:</p>
 <div class='precode'><pre><code>    phrase(
         html(<font color="#FF4444">html(
         [head(title('Howdy')),
@@ -197,11 +206,20 @@ they are not identical. A search box is not, conceptually, just a text field, bu
         TokenizedHtml,
         []),
 </code></pre></div>
-<p><code>phrase</code>'s first argument is a library DCG, <code>html//1</code>, whose argument (in red) is a DSL (domain specific language) which defines the HTML it recognizes. So, phrase/2 will unify in the above when <code>TokenizedHtml</code> is the tokenized HTML equivalent of the html defined by the first arg.</p>
-<p>It is code in this DSL which is our 'termerized HTML'.</p>
+<p>Notice that we're using phrase/2. <code>phrase</code>'s first argument is a library DCG, <code>html//1</code>, whose argument (in red) is a DSL (domain specific language) which defines the HTML it recognizes. So, phrase/2 will unify in the above when <code>TokenizedHtml</code> is the tokenized HTML equivalent of the red stuff, the 'termerized HTML' defined by the first arg of <code>html//1</code>.</p>
+<p>It is this DSL which is our 'termerized HTML'.</p>
 <h3>2_4 Proving it's a real DSL</h3>
+<p>Using a DCG just to call <code>html//1</code> and passing it the termerized HTML probably seems, at this point, pretty Rube Goldberg-ish. When we get to inclusions you'll see why it's done.</p>
 <p>Lets prove that it's a real DCG by abstracting out the generation into it's own nonterminal (See the file).</p>
-<div class='precode'><pre><code>my_nonterm --&gt;
+<div class='precode'><pre><code>say_hi(_Request) :-
+	phrase(
+	    my_nonterm,
+	    TokenizedHtml,
+	    []),
+        format('Content-type: text/html~n~n'),
+	print_html(TokenizedHtml).
+
+my_nonterm --&gt;
     html([html([head([title('Howdy')]),
                body([h1('A Simple Web Page'),
               p('With some text')])])]).
@@ -306,14 +324,8 @@ Attributes can be specified by K=V pairs like <code>class=foo</code> or by K(V) 
 Exercise: Convert a simple web page (or part of one) into termerized HTML.
 </code></pre></div>
 <h4>Inclusion</h4>
-<p>Inclusion is swipl's mechanism for encapsulating pieces of HTML generation code. Encapsulation is signaled by <code>\</code>.</p>
-<p>Inclusion is simultaneously one of the neatest features of swipl web, and one of the greatest sources of frustrating bugs.</p>
-<p>The secrets to avoid driving yourself insane with inclusion are, first, understand whether you're in termerized HTML or tokenized HTML space. Second, be aware you aren't in prolog, and need to follow the DSL's, not Prolog's, module rules.</p>
-<p>Included lists are treated as literal, tokenized HTML to be included. So, you can include a block of HTML set up with a normal editor</p>
-<div class='precode'><pre><code>    \['&lt;i&gt;in italic&lt;/i&gt;', '&lt;b&gt;now we have bold&lt;/b&gt;'],
-</code></pre></div>
-<p class='warning'>(If you do this you can't depend on <code>html//1</code> always producing valid HTML.)</p>
-<p>More powerful, if the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. This means you can create structured, reusable components of web pages, and pays off many times the slight awkwardness of 'funny looking html'.</p>
+<p>HTML is a markup language. It's tags are not the semantic units of a web page as we think about it. We want to talk about the login box, not a div with a text box blah blah. Inclusion is SWI-Prolog's mechanism for encapsulating HTML generation code.</p>
+<p>Inclusion is signaled by <code>\</code>. If the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. This means you can create structured, reusable components of web pages, and pays off many times the slight awkwardness of 'funny looking html'.</p>
 <p>The line </p>
 <div class='precode'><pre><code>    \some_included_stuff,
 </code></pre></div>
@@ -334,16 +346,50 @@ Exercise: Convert a simple web page (or part of one) into termerized HTML.
     another_inclusion(X),
     and_a_third_inclusion(X).
 </code></pre></div>
-<p>A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \</p>
+<p>Included lists are treated as literal, tokenized HTML to be included. So, you can include a block of HTML set up with a normal editor</p>
+<div class='precode'><pre><code>    \['&lt;i&gt;in italic&lt;/i&gt;', '&lt;b&gt;now we have bold&lt;/b&gt;'],
+</code></pre></div>
+<p class='warning'>(If you do this you can't depend on <code>html//1</code> always producing valid HTML.)</p>
 <p class='warning'>And, a caution. The list brackets for including a literal are not optional! <code>\['I end up in the emitted html']</code> and <code>\term</code> are completely different. The first puts <i>I end up in the emitted html</i> in the html. The second treats term as an inclusion.</p>
+<p>A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \</p>
+<p>Inclusion is simultaneously one of the neatest features of swipl web, and one of the greatest sources of frustrating bugs.</p>
+<p>The secrets to avoid driving yourself insane with inclusion are, first, understand whether you're in termerized HTML or tokenized HTML space. Second, be aware you aren't in prolog, and need to follow the DSL's, not Prolog's, module rules.</p>
 <h4>Inclusion And Modules</h4>
 <p><img src="comfymodule-01.png" style="float: left; margin-right: 12px" title="His coffee's gone cold" /></p>
-<p>If your inclusion is in another module, there's a syntax for finding it. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to explicitly specify the module. Further, there's an issue with the operator precedence, so the parens are necessary</p>
-<div class='precode' style='float:left'><pre><code>\(othermodule:inclusion(X))
-</code></pre></div>
-<p>&nbsp;</p>
-<p>If you make code that passes termerized html around, and then attempts to call semantic arguments within it, you may need <code>meta_predicate/1</code> to end up in the right module. Here be dragons. Fortunately there's an extension to meta_predicate that handles html. <code>html_meta</code> works like meta_predicate, but allows html as well as the usual ?, +, -, etc.</p>
-<div class='precode' style='float:left'><pre><code>:- html_meta  my_inclusion(+,html,?,?).
+<p>Now that you can make nifty bits of pages, you start accumulating them and soon you have enough you need to organize into modules. You use the usual use_module system and life is good for a while.</p>
+<p>Then you get this bright idea. You could make your site look really awesome by using Javascript and HTML5 to draw a 'hand drawn' border around the various sections. But now we want to add the 'hand drawn' look without having a mess everywhere. We could do:</p>
+ <div class='precode' ><pre><code>\start_hand_drawn_box, ... contents, \end_hand_drawn_box
+ </code></pre></div>
+ <p>but that's ugly - it doesn't express the containment structure.</p>
+ <p>So we write an inclusion DCG that takes some termerized html as an argument and adds the html around it to make the hand drawn look.</p>
+ <p style='clear:left'>&nbsp;</p>
+  <div class='precode'><pre><code>
+  hand_drawn_box(InnerHTML) -->
+      html([.... whole bunch of crazy javascript stuff...,
+                 div(class=hand, InnerHTML),
+            ... more totally unreadable javascript ... ]).
+ </code></pre></div>
+<p>We try this, and, after debugging the ugly javascript, it works. Cool! So, being organized, we move it into it's own module. And suddenly it fails when we try this:</p>
+  <div class='precode'><pre><code>%in module1
+  email_me_form --> 
+        html([div(class=emailme, form(.... mass of form code ...))]).
+        
+  my_contents -->
+        html([... stuff..., 
+           \hand_drawn_box([... stuff...,   \email_me_form,  ...]),
+           ... endless stuff ...]).
+
+%in module2        
+  hand_drawn_box(InnerHTML) -->
+      html([.... whole bunch of crazy javascript stuff...,
+                 div(class=hand, InnerHTML),
+            ... more totally unreadable javascript ... ]).
+ </code></pre></div>
+ <p>And it complains it doesn't know about module2:email_me_form//0 -  Ooops! hand_drawn_box is binding it's arguments at the wrong time!</p>
+<p>The same thing can happen in 'normal' Prolog code. The fix there is <code>meta_predicate/1</code>, which marks the acceptable ways to call a predicate.</p>
+<p>Fortunately there's an extension to meta_predicate that handles html. <code>html_meta</code> works like meta_predicate, but allows html as well as the usual ?, +, -, etc.</p>
+<p>Now we can make an inclusion that takes html:
+<div class='precode'><pre><code>:- html_meta  my_inclusion(+,html,?,?).
 
 my_inclusion(A, B) -->
     html(p('I treat A as a number ~d'-[A]),
@@ -352,8 +398,13 @@ my_inclusion(A, B) -->
     html(p('i appear at the end')).
     
 </code></pre></div>
-<p style='clear:left'>&nbsp;</p>
-<p><code>my_inclusion</code> takes termerized HTML as it's two arguments. The html_meta declaration ensures that a call to my_inclusion from another module will have any inclusions in the second argument wrapped with the proper module. Additionally, the pceEmacs editor will properly syntax color the argument.</p>
+<p><code>my_inclusion</code> takes termerized HTML as it's second argument. Remember that it's a DCG, so there are two additional arguments for the difference list, hance the two ? arguments.</P>
+</p>The html_meta declaration ensures that a call to my_inclusion from another module will have any inclusions in the second argument wrapped with the proper module. Additionally, the pceEmacs editor will properly syntax color the argument.</p>
+<p>This works great as long as you're passing termerized html around. Imagine things are even worse - say you're passing a list containing various html hunks to an inclusion, and it's supposed to include one based on some other criteria. We can't use <code>html_meta/1</code>.</p>
+<p>The solution is to explicitly specify the module of the inclusions. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to use the DSL's module rules. So you'll need to do this for inclusions from the calling module, not just from other modules.</p>
+<div class='precode'><pre><code>\(othermodule:inclusion(X))
+</code></pre></div>
+<p>There's an issue with the operator precedence, so the parens are necessary.</p>
 <p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, <code>meta_predicate</code>, <code>meta_html</code>, and how inclusion works.</p>
 <h4>Start A Project</h4>
 <p>At this point our exercises start building on each other. You may want to copy one of the examples to create a starting point.</p>
@@ -370,6 +421,9 @@ Exercise: Perform these refactorings:
 Add a module declaration to your code. 
 Create a second module, and move my_fancy_border into it. 
 Move  motd//0 to a third module.
+
+Exercise: Make a DCG random_saying that takes a list whose elements are termerized HTML snippets
+and includes a random one. Put it in it's own module. call it from another module. Now wrap your choices in fancy_border.
 </code></pre></div>
 <h3>2_7 Styling</h3>
 <p>Until now our web pages have looked pretty last century. To boot, we get no help adding the common elements across all pages. Lets spiff things up.</p>
@@ -471,7 +525,8 @@ data POSTed by a web form.</p>
 <p>Contrary to the statement at the top of the SWI-Prolog page, POST requests are not transparently handled. If you're handling a POST request 
 you'll need to add <code>form_data</code> option to the <code>http_parameters/3</code> form. Additionally, the code apparently 
 reads the POST data once, and can't backtrack.  3_2 demonstrates handling POST data.</p>
-<p>A semi-useful tool for websites that shove many of the same parameters around is the <code>attribute_declarations</code> option. This allows you to define how to validate various parameters in one place.</p>
+<p>A semi-useful tool for websites that shove many of the same parameters around is the <code>attribute_declarations</code> option of <code>http_parameters/3</p>. This allows you to define how to validate various parameters in one place.</p>
+<!-- TODO provide the sample from the swipl html_parameters/3 page -->
 <p>Another useful gem is <code>http:request_expansion</code>. This lets you 'decorate' the request. For example, if you want some common data from a database attached to most requests, you could just have <code>request_expansion</code> decorate it.</p>
 <p>Skipping ahead a bit, the session data is in the request structure and covers most uses of request_expansion.</p>
 <p>Finally, you'll soon tire of passing Request around. You can get the current Request object with <code>http_current_request.</code></p>
@@ -886,6 +941,16 @@ Security Checklist</p>
 <li>PLDoc server on? (see Ouch that hurt on 4000)</li>
 <li>Don't include <code>library(http/http_errors.pl)</code> to make hackers jobs harder</li>
 </ul>
+<h2>Giving Back</h2>
+<p>The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage
+you to make a project with the SWI tools. At the end of the course there's a plea for people to help with a library of web patterns. If you don't have a specific project, you might consider doing that.</p>
+<p>The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage
+you to make a project with the SWI tools.</p>
+<p>I imagine many of you will have a project - it will be why you're doing this course. But if you don't, or if your 'real' project is going to be a large one and you don't want to start it while a new user, or you just feel like doing a bit of good in return for free internet stuff, consider this:</p>
+<p>I thought I'd invite  everyone who takes this course to contribute a piece to an opensource library. Anyone who takes the course should be well equipped to contribute. It's not a requirement, but is a source of many small, semi-independent tasks suitable for cementing learning.</p>
+<p>I don't like big, monolithic libraries. It's frustrating to discover you have to accept a big memory hit and a bunch of painful setup to get one cool little bit. So I'm making a set of small, mostly independent tools to do common web patterns.</p>
+<p>I'm calling it <em>Weblog</em> a library that makes common web interaction patterns easier.</p>
+<p>If you're up for it, head over to <a href="https://github.com/Anniepoo/weblog">the Weblog repo on github</a>, grab a copy, then head to <a href="http://www.welie.com/patterns/index.php">Welie.com</a> and find yourself a pattern you like that isn't in weblog yet. Or drop me an email and I'll suggest some.</p>
 <h2>Thanks</h2>
 <p>The author wishes to thank Jan Wielemaker, L.K. van der Meij, and confab for pointing out errors and improvements.</p>
 <p>This tutorial was written using the free online markdown editor <a href="http://dillinger.io/">Dillinger</a>.</p>
