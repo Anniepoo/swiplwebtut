@@ -738,6 +738,13 @@ Well, we can serve files, now lets get them included in our web pages.</p>
 </code></pre></div>
  <p>The way to handle this is to use <code>\[...]</code> and mailman</p>
  <div class='precode'><pre><code>
+ :-html_meta if_ie(+,html,?,?).
+ if_ie(Cond, HTML) --&gt;
+    html(\['&lt;!--[if ', Cond, ']&gt;' ]),
+    html(HTML),
+    html(\['&lt;![endif]--&gt;' ]).
+
+    ... then when I want to insert conditional material ...
      html([
           \html_requires(leaflet),
           \html_post(head,
