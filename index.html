@@ -135,7 +135,7 @@ http:location(files, '/f', []).
 <p>A warning of a confusing point. I was tryig to make these 'abstract paths' be abstract files paths for a long time when learning this stuff. Beware, the two have nothing to do with each other. To make things worse, later on we'll encounter them used together.</p>
 <div class='precode exercise'><pre><code>Exercise: Add a handler that says 'sorry, not here' to 1_3 when you try something like http://127.0.0.1:8000/this/is/invalid
 </code></pre></div>
-<p>A final note. Remember that your server will some day probably be proxied to by apache, so your root path may be changed. You can change all abstract paths at once by redefining http:prefix.</p>
+<p>A final note. Remember that your server will some day probably be proxied to by apache, so your root path may be changed. You can change all abstract paths at once by redefining the setting http:prefix.</p>
 <h2>2 Generating HTML</h2>
 <p><a id='2'></a></p>
 <p>So far we've served plain text. Lets serve HTML.</p>
@@ -386,25 +386,26 @@ Exercise: Convert a simple web page (or part of one) into termerized HTML.
             ... more totally unreadable javascript ... ]).
  </code></pre></div>
  <p>And it complains it doesn't know about module2:email_me_form//0 -  Ooops! hand_drawn_box is binding it's arguments at the wrong time!</p>
-<p>The same thing can happen in 'normal' Prolog code. The fix there is <code>meta_predicate/1</code>, which marks the acceptable ways to call a predicate.</p>
-<p>Fortunately there's an extension to meta_predicate that handles html. <code>html_meta</code> works like meta_predicate, but allows html as well as the usual ?, +, -, etc.</p>
+<p>The same thing can happen in 'normal' Prolog code. The fix there is the <code>meta_predicate/1</code> declaration, which marks which arguments are 'module sensitive'. Module sensitive arguments have their module resolved before the call.</p>
+<p>Fortunately there's an extension to meta_predicate that handles html. <code>html_meta</code> works like meta_predicate, but allows html as well as the usual :, ?, +, -, etc.</p>
 <p>Now we can make an inclusion that takes html:
-<div class='precode'><pre><code>:- html_meta  my_inclusion(+,html,?,?).
+<div class='precode'><pre><code>%in module2 
 
-my_inclusion(A, B) -->
-    html(p('I treat A as a number ~d'-[A]),
-    html(p('i appear in the middle')),
-    html(B),
-    html(p('i appear at the end')).
+:- html_meta  hand_drawn_box(html,?,?).
+
+  hand_drawn_box(InnerHTML) -->
+      html([.... whole bunch of crazy javascript stuff...,
+                 div(class=hand, InnerHTML),
+            ... more totally unreadable javascript ... ]).
     
 </code></pre></div>
-<p><code>my_inclusion</code> takes termerized HTML as it's second argument. Remember that it's a DCG, so there are two additional arguments for the difference list, hance the two ? arguments.</P>
-</p>The html_meta declaration ensures that a call to my_inclusion from another module will have any inclusions in the second argument wrapped with the proper module. Additionally, the pceEmacs editor will properly syntax color the argument.</p>
+<p><code>hand_drawn_box</code> takes termerized HTML as it's first argument. Remember that it's a DCG, so there are two additional arguments for the difference list, hance the two ? arguments.</P>
+</p>Besides fixing the module issue, the pceEmacs editor will now properly syntax color the argument.</p>
 <p>This works great as long as you're passing termerized html around. Imagine things are even worse - say you're passing a list containing various html hunks to an inclusion, and it's supposed to include one based on some other criteria. We can't use <code>html_meta/1</code>.</p>
 <p>The solution is to explicitly specify the module of the inclusions. Remember, you're <em>not in Prolog</em>, but <em>in the DSL</em>, so you have to use the DSL's module rules. So you'll need to do this for inclusions from the calling module, not just from other modules.</p>
 <div class='precode'><pre><code>\(othermodule:inclusion(X))
 </code></pre></div>
-<p>There's an issue with the operator precedence, so the parens are necessary.</p>
+<p>Operator precedence makes the parens are necessary.</p>
 <p>I would say, module issues are, along with inclusion, the great pain points in using the web framework.  Don't go past this point without understanding the module system, <code>meta_predicate</code>, <code>meta_html</code>, and how inclusion works.</p>
 <h4>Start A Project</h4>
 <p>At this point our exercises start building on each other. You may want to copy one of the examples to create a starting point.</p>
@@ -914,7 +915,11 @@ backup_pw('admin', 'abc123').
 <p>Swipl includes a fairly bare bones logging package. Simply including </p>
 <div class='precode'><pre><code>:- use_module(library(http/http_log)).
 </code></pre></div>
-<p>turns on logging.</p>
+<p>turns on logging. This</p>
+<div class='precode'><pre><code>
+http_log('incorrect answer ~d, proper answer is 42, [Answer]).
+</code></pre></div>
+<p>Works just like format, but writes to the log file</p>
 <p>Run 10_3 and look wherever you unzipped the examples. Youll have a new file, httpd.log
 Open it, you'll see</p>
 <div class='precode'><pre><code>/*Tue Aug 28 13:27:20 2012*/ request(2, 1346185640.163, [peer(ip(127,0,0,1)),method(get),request_uri('/favicon.ico'),path('/favicon.ico'),http_version(1-1),host('127.0.0.1'),port(8000),user_agent('Mozilla/5.0 (Windows NT 6.1; WOW64; rv:14.0) Gecko/20100101 Firefox/14.0.1'),dnt('1'),connection('keep-alive')]).

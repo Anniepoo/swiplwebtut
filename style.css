@@ -2,6 +2,8 @@ body {
 	font-family: "Palatino Linotype", "Book Antiqua", Palatino, serif;
 	background-color: #EEEEFF;
 	line-height: 130%;
+    margin-left: 80px;
+    margin-right: 120px;
 }
 
 .contents a {
