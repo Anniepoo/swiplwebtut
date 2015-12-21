@@ -79,7 +79,9 @@ http://www.swi-prolog.org/howto/http/'[This page] in the SWI-Prolog docs is usef
 Getting Stuck
 ^^^^^^^^^^^^^
 
-If you have questions and reasonable effort doesn't answer them, drop me email at annie@theelginworks.com . Please, if you're taking a beginning Prolog course, ask your instructor. Questions about family trees will be ignored. But if you're working on a web app, feel free.
+Many of the exercises in this tutorial were designed to push you to go explore the documentation. I feel students learn more from doing tasks like 'real programmers', and 'how do I do X' is a daily experience for all of us. So don't assume you can do all the exercises from this document! You can't!
+
+If you have questions and reasonable effort doesn't answer them, drop me email at annie@theelginworks.com . Please, if you're taking a beginning Prolog course, ask your instructor basic Prolog questions. Questions about family trees will be ignored. But if you're working on a web app, feel free.
 
 Asking on ##Prolog on freenode.net is also a good way to get answers.
 
@@ -88,9 +90,9 @@ Finally, I well could be wrong. This material's not that well documented in spot
 Learning By Doing
 ^^^^^^^^^^^^^^^^^
 
-The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage
+The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage you to make a project with the SWI tools. At the end of the course there's a plea for people to help with a library of web patterns. If you don't have a specific project, you might consider doing that.
 
-you to make a project with the SWI tools. At the end of the course there's a plea for people to help with a library of web patterns. If you don't have a specific project, you might consider doing that.
+If you're the "dive in and figure it out, make a toy project" sort, you may want to peek ahead to the parameters section at some point, as the course order slogs through all of html generation first, an orderly process but one that means you're limited what you can build til you get there.
 
 With all that out of the way, on to the tutorial.
 
@@ -166,7 +168,7 @@ my_handler_code(WhatToSay, Request) :-
     and Request is a complex term that represents the httprequest (covered later)
 ----
 
-The last argument is a set of options. The most interesting of these is +prefix+, which lets a single handler handle everything below the route as well. More about handler options in the section on serving asset files.
+The last argument is a set of options. The most interesting of these is +prefix+, which lets a single handler handle everything below the route as well. If you need to override an existing handler, you may need the priority option. +priority(0)+ is default.
 
 Now we're ready for the actual handler rule.
 
@@ -332,7 +334,7 @@ Two Camps
 
 There are two camps when it comes to HTML generation.
 
-image:twocamps-01.png[Well, for Prolog there are three - us unemployed, broke, homeless Prolog programmers down by the railroad tracks have our own camp]
+image:twocamps-01.png["Well, for Prolog there are three camps - us unemployed, broke, homeless Prolog programmers have our own camp down by the railroad tracks"]
 
 The 'template' camp wants to edit HTML with normal HTML tools, and will live with awkward php/jsp/asp style +&lt;% .... %&gt;+ escaping for dynamic generation.
 
@@ -357,6 +359,8 @@ If you pitch your tent in the template camp, SWI-Prolog provides support for it 
 But both sides of the debate have merit. Templates are great for working with a web designer, and of course the toolchain for normal HTML is far better developed. Separating function and appearance is a good thing to do, especially if you'll be using the code for more than one website.
 
 On the other hand, modern web applications seem to make almost everything on the page dynamic. On the SWI-Prolog.org website, for example, even Owlie the owl icon is dynamic (he changes on holidays). If you're generating tiny bits of HTML automatically, templates can become a nightmare.
+
+TIP: As an aside, if you like the whole WordPress style 'they write most of the application for me' framework, check out Raivo Laanemets' http://blog-core.net/[Blog-Core].
 
 Combining Options
 ^^^^^^^^^^^^^^^^^
@@ -392,35 +396,35 @@ Clearly we're not doing this for long. But it's nice to know you can just print 
 
 This isn't any better, but is an important step in understanding.
 
-WARNING:*DON&apos;T* do this in your own code.
+WARNING: *Don't* do this in your own code.
 
-+print_html+ is a behind the scenes predicate that converts a list of HTML chunks into a string containing HTML.
++print_html+ is a behind the scenes predicate that converts a list of HTML chunks into a string containing HTML. Besides just concatenating, it inserts some rough formatting.
 
 ----
 say_hi(_Request) :-
         format('Content-type: text/html~n~n'),
     print_html(
-    ['&lt;html&gt;',
-     '&lt;head&gt;',
-     '&lt;title&gt;',
+    ['<html>',
+     '<head>',
+     '<title>',
      'Howdy',
-     '&lt;/title&gt;',
-     '&lt;/head&gt;',
-     '&lt;body&gt;',
-     '&lt;h2&gt;',
+     '</title>',
+     '</head>',
+     '<body>',
+     '<h2>',
      'A Simple Web Page',
-     '&lt;/h2&gt;',
-     '&lt;p&gt;',
+     '</h2>',
+     '<p>',
      'With some text.',
-     '&lt;/p&gt;',
-     '&lt;/body&gt;',
-     '&lt;/html&gt;']).
+     '</p>',
+     '</body>',
+     '</html>']).
 ----
 
 Representing HTML
 ~~~~~~~~~~~~~~~~~
 
-SWI-Prolog has 3 representations for HTML. It can be a single atom, like in 2_1, or a list of tokens, like this, or a term form that we'll show next. Keeping track of which form you're working with can be one of the more confusing bits. So I'm introducing some terminology that Jan doesn't use in the SWI-Prolog documentation.
+SWI-Prolog has 3 representations for HTML. It can be a single atom, like in 2_1, or a list of tokens, (tokenized html), or a term form (termerized html) that we'll show next. Keeping track of which form you're working with can be one of the more confusing bits. So I'm introducing some terminology that Jan doesn't use in the SWI-Prolog documentation.
 
 *HTML atom*::
    an atom or string with HTML in it (the 2_1 representation)
@@ -438,6 +442,8 @@ Run 2_2 and look at the generated HTML.
 2_3 html//1 And Termerized HTML
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The primary tool for generating HTML in real applications is +html//1+, a DCG that takes an argument that defines some html using a domain specific language we call _Termerized HTML_. 
+
 image:comfy.png["He's just read my DCG tutorial, that's why he looks like that", width=244,link="/swipltuts/clpfd/clpfd.html"]
 
 Finally, we see something that looks like reasonable HTML generation.
@@ -450,15 +456,16 @@ That's what SWI-Prolog does, in a sorta sideways way. Here's an example:
 
 ----
     phrase(
-        html(<font color="#FF4444">html(
+        html(
         [head(title('Howdy')),
          body([h1('A Simple Web Page'),
-              p('With some text')])])</font>),
+              p('With some text')])
+	    ]),
         TokenizedHtml,
         []),
 ----
 
-Notice that we're using +phrase/2+. +phrase+'s first argument is a library DCG, +html//1+, whose argument (in red) is a DSL (domain specific language) which defines the HTML it recognizes. So, phrase/2 will unify in the above when +TokenizedHtml+ is the tokenized HTML equivalent of the red stuff, the 'termerized HTML' defined by the first arg of +html//1+.
+Notice that we're using +phrase/2+. +phrase+'s first argument is a library DCG, +html//1+, whose argument is a DSL (domain specific language) which defines the HTML it recognizes. So, phrase/2 will unify in the above when +TokenizedHtml+ is the tokenized HTML equivalent of the red stuff, the 'termerized HTML' defined by the first arg of +html//1+.
 
 It is this DSL which is our 'termerized HTML'.
 
@@ -487,7 +494,7 @@ my_nonterm -->
 2_5 reply_html_page
 ~~~~~~~~~~~~~~~~~~~
 
-Generating our own head and body tags is more ceremony than we really need. SWI-Prolog provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work.
+Generating our own head and body tags is more ceremony than we really need. SWI-Prolog provides a nice wrapper that takes care of the boilerplate, and in the process handles a lot of other behind the scenes work. Notice it's handled the Content-type header for us.
 
 ----
 say_hi(_Request) :-
@@ -497,7 +504,7 @@ say_hi(_Request) :-
         p('With some text')]).
 ----
 
-We're down to a single API call that takes some termerized HTML to include in the head and the contents of the body, which is pretty close to zero 'non data' ink.
+We're down to a single API call that takes some termerized HTML to include in the head and the contents of the body, which is pretty close to zero ceremony.
 
 (If you're paniced and thinking 'oh, man, I don't control the head?', relax - you do, we'll get there when we cover the arity 3 version +reply_html_page/3+ in section 2_7.
 
@@ -528,7 +535,7 @@ The html//1 term takes a term or a list as it's sole argument, in the same forma
 Here's most of the forms you can apply:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-One form you *won't* see is a nested list.  +[p('a para'), [p('in a nested list')]]+ is *not* valid termerized HTML. You've been warned.
+CAUTION: One form you *won't* see is a nested list.  +[p('a para'), [p('in a nested list')]]+ is *not* valid termerized HTML. You've been warned.
 
 Inner HTML
 ^^^^^^^^^^
@@ -560,7 +567,7 @@ Entities
 entity escaping happens
 
 ----
-<b>this wont be bold</b>
+p('<b>this wont be bold</b>')
 ----
 
 appears literally, not in bold.
@@ -671,18 +678,18 @@ This section's certainly long, but it's the core of the tutorial. Still, lets br
 
 .html exercises
 ****
-Exercises: 
+Exercise: 
 Convert a simple web page from a project you've made into termerized HTML.
 
 Build your own example of each element in this section
 ****
 
 Inclusion
-^^^^^^^^^
+---------
 
-HTML is a markup language. It's tags are not the semantic units of a web page as we think about it. We want to talk about the login box, not a div with a text box blah blah. Inclusion is SWI-Prolog's mechanism for encapsulating HTML generation code.
+HTML is a markup language. It's tags are not the semantic units of a web page as we think about it. We want to talk about the login box, not a div with a text box blah blah. Inclusion is SWI-Prolog's mechanism for encapsulating HTML generation code. This means you can create structured, reusable components of web pages, and pays off many times the slight awkwardness of 'funny looking html'.
 
-Inclusion is signaled by +\+. If the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. This means you can create structured, reusable components of web pages, and pays off many times the slight awkwardness of 'funny looking html'.
+Inclusion is signaled by +\+. If the argument of \ is a term, it will be treated as a DCG, and expanded to tokenized HTML. 
 
 The line 
 
@@ -693,7 +700,7 @@ The line
 Calls the DCG 
 
 ----
-some_included_stuff --&gt;
+some_included_stuff -->
 
     html([p('Some included stuff')]).
 ----
@@ -704,10 +711,10 @@ Of course you can pass semantic arguments
 \more_included_stuff('Whoop Whoop!'),
 ----
 
-...
+...which calls...
 
 ----
-more_included_stuff(X) --&gt;
+more_included_stuff(X) -->
 
     html([p(['More included stuff: ', b(X)])]).
 ----
@@ -730,7 +737,7 @@ Included lists are treated as literal, tokenized HTML to be included. So, you ca
 
 WARNING: If you do this you can't depend on +html//1+ always producing valid HTML. For this reason, seriously consider using quasiquotes instead. Quasiquotes largely deprecate this mechanism.
 
-WARNING: And, a caution. The list brackets for including a literal are not optional! +\['I end up in the emitted html']+ and +\term+ are completely different. The first puts <i>I end up in the emitted html</i> in the html. The second treats term as an inclusion.
+CAUTION: The list brackets for including a literal are not optional! +\[term]+ and +\term+ are completely different. The first puts <i>term</i> in the html. The second treats term as an inclusion.
 
 A useful way of thinking about inclusion is that \ is an escape that says, in effect 'enter tokenized HTML world'. \
 
@@ -741,22 +748,36 @@ The secrets to avoid driving yourself insane with inclusion are, first, understa
 Quasiquotes
 ~~~~~~~~~~~
 
-At this point those of you in the template camp are probably panicing, thinking that the only escape from Jan's strange formatting for html is to abandon ship and use simple-template, or ignore the warnings liberally plastered about the +\[ ]+ format.
+At this point those of you in the template camp are probably running in circles, screaming and shouting, thinking that the only escape from Jan's strange formatting for html is to abandon ship and use simple-template, or ignore the warnings liberally plastered about the +\[ ]+ format.
 
 Have no fear, quasiquotes are here.
 
 Quasiquotes are an extension to the Prolog syntax that says, effectively *"and now for a little of this other language, which I'll syntax check and convert at compile time to a Prolog term"*.
 
-Just the thing for us. SWI-Prolog has a perfectly good html syntax checker. The libraries wrap it in quasiquotes.  It looks like this:
+Here's demo of the html quasiquoter in use. We import html_write to get the appropriate quasiquoter (html in this case) and then use +{|html(Y)||<p>Y</p>|}+, the curly brackets and or bars defining "this is a quasiquoter, here's the args and body". +html(Y)+ defines the args to be passed in (notice that it's not like function argument passing, the name can't be changed like with a formal arg on a function), and inside is the body, which is syntax checked, and Y is replaced.
+
+----
+2 ?- use_module(library(http/html_write)).
+true.
+
+3 ?- Y=7,X = {|html(Y)||<p>Y</p>|}.
+Y = 7,
+X = [element(p, [], [7])].
+
+4 ?- 
+----
+
+Just the thing for us. Now we have syntax checking, editor coloring, and aren't in the wild west of converting between html and strings.
+
+Here's what it looks like inside of a DCG inclusion:
 
 ----
 my_headline(X) -->
 	html({|html(X)||<h1>X</h1>|}).
 ----
 
-The quasiquote is the portion  +{|html(<args>)||<body>|}+.
+Notice we've passed it to html//1. That's usually what you'll do with it.
 
-Body is expected to be valid html, with some element's attributes or contents possibly matching the names of arguments (and being replaced, of course).
 But what's it compile into?
 The SWI-Prolog docs say 
 
@@ -765,7 +786,7 @@ ____
 These quotations produce a DOM term that is suitable for html//1 and other predicates that are declared to consume this format. 
 ____
 
-So, the normal thing to do is to pass the output to +html/4+ .
+The funny list with element/3 term in it is the format SWI-Prolog represents SGML in. But usually you won't care about that.
 
 If you want to insert some normal HTML boilerplate in the midst of a mass of termerized html, do it like this:
 
@@ -801,7 +822,7 @@ hand_drawn_box(InnerHTML) -->
       html([.... whole bunch of crazy javascript stuff...,
                  div(class=hand, InnerHTML),
             ... more totally unreadable javascript ... ]).
- ----
+----
 
 We try this, and, after debugging the ugly javascript, it works. Cool! So, being organized, we move it into it's own module. And suddenly it fails when we try this:
 
@@ -822,7 +843,7 @@ We try this, and, after debugging the ugly javascript, it works. Cool! So, being
             ... more totally unreadable javascript ... ]).
 ----
 
- And it complains it doesn't know about module2:email_me_form//0 -  Ooops! hand_drawn_box is binding it's arguments at the wrong time!
+And it complains it doesn't know about module2:email_me_form//0 -  Ooops! hand_drawn_box is binding it's arguments at the wrong time!
 
 The same thing can happen in 'normal' Prolog code. The fix there is the +meta_predicate/1+ declaration, which marks which arguments are 'module sensitive'. Module sensitive arguments have their module resolved before the call. Unfortunately, we're not in Prolog, we're in termerized HTML DSL language.
 
@@ -925,15 +946,24 @@ You can do the same thing with the head. Add a hook predicate for user:head. Thi
 Of course you can have more than one style. At my employer we use one style for content to be viewed on the web and one style for content to be viewed in the virtual world.
 
 ****
+Exercise:
 Add a header and footer to your web page from the exercises in 2_6 using body styling. 
+
+Exercise:
+Make a web page that has some main content and some 'ads' (feel free to just make a div and some text for the ads) served from /free  and the same content without ads served from /paid. Minimize repeated code.
+
 ****
 
-<h3>2_8 Mailman</h3>
-http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.17.2%27,swi%28%27/doc/packages/http.html%27%29%29'[Mailman] is a facility for creating HTML that ultimately ends up somewhere besides where you generated it. It has nothing to do with email.
+2_8 Mailman
+~~~~~~~~~~~
 
-Sometimes it's a lot easier to generate a page in an order other than the final lexical order of the html.
+http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.17.2%27,swi%28%27/doc/packages/http.html%27%29%29'[Mailman] is a facility for creating HTML that ultimately ends up somewhere besides where you generated it. It has nothing to do with email. 
 
-Suppose we have a page with a top navigation area that gets dynamicly generated. Being organized, we abstract the nav bar into a DCG.
+We're covering it with styling because i'ts often used to place content in the head, but it has a lot of other uses.
+
+Often it's a lot easier to generate a page in an order other than the final lexical order of the html.
+
+Suppose we have a page with a top navigation area that gets dynamicly generated. Being organized, we abstract the nav bar into an inclusion DCG.
 
 Early version - not like the example file
 
@@ -960,7 +990,7 @@ image:addfooter-01.png[No, I don't know what a web empowerer is. Neither do they
 
 We already have the list of buttons when we make the top menu. Can we avoid duplicating the work of making the list for the bottom?
 
-Mailman allows us to generate tokenized HTML in one place and 'mail' it to another
+Mailman allows us to generate tokenized HTML in one place and 'mail' it to another place, the _mailbox_, in the page.
 
 File 2_8 sends the bottom buttons to the bottom with
 
@@ -991,12 +1021,26 @@ nav_bar -->
     html([\html_post(bottom_nav, BottomButtons) | TopButtons]).
 ----
 
-A common reason to do this is a page element that in turn requires something in the head, say a widget that depends on a css or js file. Another common reason is an element (say a list of blog posts) whose contents are accumulated during page generation, and a set of links to them near the top of the page.
+A common reason to do this is a page element that in turn requires something in the head, say a widget that depends on a dynamic css or js snippet or dynamic keyword generation. In fact, the mailbox name _head_ is always defined.
 
-Mailman is a useful tool. However, be aware, it doesn't know about modules and gets expanded elsewhere. You need to use the +\(module:name(args))+ form for any inclusions you mail. (rumored fixed, 5/19/2013 AO)
+Another common reason is an element (say a list of blog posts) whose contents are accumulated during page generation, and a set of links to them near the top of the page.
+
+Be aware, it's possible to baffle it when mailing inclusions deep in other structures. You may need to use the +\(module:name(args))+ form for any inclusions you mail. (if all you're mailing is the inclusion, the system handles that).
 
 ****
-Exercise: Add an inclusion call to your page that takes an argument which is displayed in the page title.
+Exercise: 
+Add an inclusion call to your page that takes an argument which is displayed in the page title.
+
+Exercise:
+Look at some project you've worked on that made a more or less complex dynamic page. Would it have been easier to code with mailman?
+
+Exercise (harder)
+Many pre/non-jquery javascript libraries include some javascript snippet that should appear at the bottom of the page (so it runs after the page loads).
+Set up a way in your project that inclusions that need such a snippet can send them without the widget user having to remember.
+
+Exercise
+Use the debugger to look at what comes into your overload of user:body and user:head when you are using mailman.
+
 ****
 
 3 Handling Parameters
@@ -1007,7 +1051,8 @@ By now you're probably itching to make something real. With parameters, we can s
 3_1 +http_parameters+
 ~~~~~~~~~~~~~~~~~~~~~
 
-image:snake-handlers.jpg["Django dev. Bitten by an implicit join 30 seconds after this picture was taken. Has no problem handling parameters in SWI-Prolog.",width=192" />
+image:snake-handlers.jpg["Django dev. Bitten by an implicit join 30 seconds after this picture was taken. Has no problem handling parameters in SWI-Prolog.",width=192]
+
 This section is about the pred http_parameters, documented at http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.9%27,swi%28%27/doc/packages/http.html%27%29%29[this page]. 
 
 The documentation is actually quite good, so I'm going to refer you there for parameter handling, but tell you about some gotchas.
@@ -1023,7 +1068,7 @@ Gotcha #2: POST requests where the body has query string syntax aren't available
 
 POST is often used to send large chunks of data not in search string format. Example 3_2 demonstrates directly reading the data POSTed by a web form.
 
-Contrary to the statement at the top of the SWI-Prolog page, POST requests are not transparently handled. If you're handling a POST request you'll need to add +form_data+ option to the +http_parameters/3+ form. Additionally, the code apparently reads the POST data once, and can't backtrack.  3_2 demonstrates handling POST data.
+Contrary to the statement at the top of the SWI-Prolog page, POST requests are not transparently handled. If you're handling a POST request you'll need to add the +form_data+ option to the +http_parameters/3+ form. Additionally, the code apparently reads the POST data once, and can't backtrack.  3_2 demonstrates handling POST data.
 
 A semi-useful tool for websites that shove many of the same parameters around is the +attribute_declarations+ option of +http_parameters/3. This allows you to define how to validate various parameters in one place.
 
@@ -1050,7 +1095,15 @@ Skipping ahead a bit, the session data is in the request structure and covers mo
 Finally, you'll soon tire of passing Request around. You can get the current Request object with +http_current_request.+
 
 ****
-Exercise: Create a landing page for the web form you made in 'inclusion and modules'.
+Exercise: 
+Create a landing page for the web form you made in 'inclusion and modules'.
+
+Exercise:
+Change that web form from GET to POST
+
+Exercise: 
+Use curl to send some arbitrary data via POST body to a handler.
+
 ****
 
 3_3 File Upload
@@ -1122,70 +1175,15 @@ We won't cover it in this course, but you can control who gets a session. If you
 
 You can also restrict which parts of your site cause a session to be created. This can be very useful for, say, an informational site that doesn't need sessions for most visitors, but includes a small online store selling cafe press mugs and so on and needs sessions for the shopping cart.
 
-5 Dispatching Revisited
+****
+Exercise:
+Change the timeout for how long sessions last
+****
+
+Handler ID's
 -----------------------
 
-I promised we'd revisit dispatching. 
-
-5_1 Prefixes and Path Rules
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-A couple comments about the code. I repeat the +files+ abstract path we defined in 1_3.
-TOODO - did I really do that?
-
-----
-% from 1_3, if you've forgotten take a look
-:- multifile http:location/3.
-:- dynamic   http:location/3.
-
-http:location(files, '/f', []).
-----
-
-Off topic, I use the fact that +http_handler/3+ calls it's 2nd arg with one more arg (the Request), rather than with one arg, to cut down on code. 
-
-We often want to make a directory and serve everything in that directory as plain files. Or we want everything below a certain point to be handled by a different system.
-
-We can define a handler that handles a path and everything below it by adding +prefix+ to the option list +http_handler+ takes as it's 3rd argument.
-
-----
-:- http_handler(root('bar/moo'), a_handler(barmoo), [prefix, priority(10)]).
-----
-
-Of course, between abstract path specification, prefix, handler declarations spread all over creation, and the way projects just tend to grow, we need some rules to resolve conflicts. Here they are. When both A and B potentially match:
-
-* First, if handler A handles a *refinement* of B, (that is, A is more specific) then A wins
-* Second, if A is higher priority than B, A wins
-* Third, if A was declared after B, A wins (note that this might be exciting in a multifile situation. Try to stay outta this one.)
-
-To set priority use option +priority(n)+. +priority(0)+ is default.
-
-****
-Exercise: Run 5_1 and try each of these in a browser. Try to predict ahead of time what will be printed
-
-http://127.0.0.1:8000/
-http://127.0.0.1:8000/bar
-http://127.0.0.1:8000/bar/
-http://127.0.0.1:8000/bar/gorp
-http://127.0.0.1:8000/bar/mep/fnord
-http://127.0.0.1:8000/hoohaa
-http://127.0.0.1:8000/numnums
-http://127.0.0.1:8000/bar/moo/gleet
-http://127.0.0.1:8000/bar/moo/waa
-http://127.0.0.1:8000/hoops   (hoops isn't valid)
-****
-
-And another one
-
-****
-Exercise: Provide yourself a nice error message instead of 404ing in response to an invalid path (hint, you need to complete the universe of paths).
-
-Test your code to make sure you get the same answers as before for some of the paths listed in the previous exercise.
-****
-
-5_2 Handler ID's
-~~~~~~~~~~~~~~~~
-
-There's no actual 5_2 file. 
+The other half of abstract paths is ways to refer to handlers that don't break even if we move their location around. Handler ID's are that solution.
 
 I think of this joke when I think of handler id's in SWI-Prolog.
 
@@ -1247,7 +1245,7 @@ Now add some ID's to 1_3's handlers. Using reply_html_page and html//1, make a s
 Now move 1_3's other pages to different URI's without changing your new handler code.
 ****
 
-6 Handlers Revisited
+Special Handlers
 --------------------
 
 6_1 Serving Files
@@ -1273,17 +1271,7 @@ This line deserves some scrutiny.
 
 First, note that we're finally seeing why I've been dragging around this files(.) location. Our path is the root of 'files', which maps to uri /f
 
-Second, we're passing 'assets' to +http_reply_from_files+. That's a relative file path.
-
-TODO - this needs explained in it's own module
-
-SWI-Prolog has an abstract file path system - you've seen it when you include modules with
-
-----
-:- use_module(library(http/html_write)).
-----
-
-+library+ is an abstract file location.
+Second, we're using a path alias to describe the file's location. In this case we're just using assets, which is a subdirectory of the current one.
 
 Lastly, note the +prefix+. So everything under the assets directory will be served. Wow, just like we're Apache or something! Maybe not. Can't make a living maintaining SWI-Prolog config files.
 
@@ -1291,7 +1279,7 @@ Run the server and browse http://127.0.0.1:8080/f/swipl.png
 
 Congrats! The owl appears.
 
-TOO - need to mention serve_files_from_directory.
+TOO - need to mention serve_files_from_directory. As of this moment, not sure why there are two of them, I've asked on the list.
 
 One bit of security here. You don't want to serve something outside the served space, so need to prevent J Random Hacker from asking for +http://mysite.com/f/../../../etc/passwd+ or some such. So, it's wise to use +http_safe_file/2+ to sanitize file names. http_reply_file does the sanitizing for you.
 
@@ -1301,15 +1289,9 @@ Hey, what happens if you ask for the directory?There's a kumquat in there!
 
 Gives a directory listing just like a real web server, even if it *is* in a language that's only used for AI. 
 
-And, for the record, you can make an index.html page just like normal*.
+And, for the record, you can make an index.html page just like normal. Browse http://127.0.0.1:8080/f/
 
-The SWI-Prolog libraries define a few static file handlers - +css, js, and icon+ are all
-
-defined already. You probably want to have those same handlers. Easy! Just add your directory to the
-
-file alias the library handler is already handling. If your css files are in +./files/css+ under
-
-your project directory, you can just do:
+The SWI-Prolog libraries define a few static file handlers - +css, js, and icon+ are all defined already. You probably want to have those same handlers. Easy! Just add your directory to the file alias the library handler is already handling. If your css files are in +./files/css+ under your project directory, you can just do:
 
 ----
 user:file_search_path(css, 'files/css').
@@ -1330,9 +1312,8 @@ Hmm... that's not so good. Nasty error message.
 
 In a previous exercise we made a handler for everything else, but that responded with a page (a 200 response). Lets make a real 404.
 
-<h3>6_2 404 response</h3>
-
-TODO - I don't understand this myself
+6_2 404 response
+~~~~~~~~~~~~~~~~
 
 When we can't do what we're asked, we fail. Can't serve a file at http://127.0.0.1:8080/f/robot.png, so we fail.
 
@@ -1346,11 +1327,10 @@ Instead of an ugly error lets do the right thing and serve a 404
 
 ----
 serve_files(Request) :-
+     http_reply_from_files('assets', [], Request).
+serve_files(Request) :-
       http_404([], Request).
 ----
-
-
-&nbsp;
 
 ****
 Exercise: How would you make a 'site offline' function that the NOC staff could control?
@@ -1361,8 +1341,6 @@ Exercise: Modify 6_2 to serve javascript, css, and image files from 3 separate d
 
 6_3 Redirect
 ~~~~~~~~~~~~
-
-(no file)
 
 You're probably wondering what happened to redirects. If you're used to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redirect, consider calling the handler of the page you're redirecting to. 
 
@@ -1391,6 +1369,7 @@ a_handler(_Request) :-
 ----
 
 Now we need to make sure the css link gets sent. How about making an inclusion that does this for an arbitrary URL. Then we can include whatever bit of special CSS without much code.
+
 ----
 css(URL) -->
         html_post(css,
@@ -1406,7 +1385,7 @@ A common situation is dealing with ugly hacks to get around IE borkedness. Here'
 
 ----
 <!--[if lte IE 8]>
-<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css"&gt;
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.5/leaflet.ie.css">
 <![endif]-->
 ----
 
@@ -1443,7 +1422,9 @@ Looking at 7_1, a few defects of the method come to mind
 * It's a bit of unneeded ceremony
 * If a resource needs another resource you have to remember that yourself
 
-SWI-Prolog to the rescue, sorta. As long as we're talking .js or .css files, you can do 'requires' type of thing. You declare 'resources', and then include them with +html_requires//1+. It's restricted to those two because it has to know how to expand them (eg for css it's to make a stylesheet link).
+SWI-Prolog to the rescue. Using the resource manager, you describe 'resources', and then include them with +html_requires//1+. 
+
+How you include a resource of course depends on it's type, because it has to know how to write the tag to include it (eg for css it's to make a stylesheet link). So the default only understands javascript and css, but you can add your own types.
 
 So, our page requires some special bit of css in specialstyle.css, which depends on the corporate standard 'gradstyle.css'. So lets enforce including gradstyle.css any time we include specialstyle.css.
 
@@ -1451,8 +1432,14 @@ So, our page requires some special bit of css in specialstyle.css, which depends
 :- html_resource(files('specialstyle.css'), [requires(files('gradstyle.css'))]).
 ----
 
-
 The first arg is a standard path, as an URI or abstract path. The second is a +properties+ list. The most useful is requires, which takes another resource path (abstract path here) or a list of such.
+
+There are a few other very useful options. 
+
+* +virtual(true)+ lets you set up, for example, bootstrap as a single resource, bootstrap, and get the js, the css, and anything else it needs, or decouple bootstrap from a version number
+* +ordered(true)+ makes sure the resources get loaded in the right order.
+* +aggregate/1+ is supposed to be for situations where you might need only a small part of a large file. If you have a big css file with sections A, B, C, and D, and four smaller files A,B,C, and D, and you load the big one in one place, you don't need the smaller ones. The 'a number of' algorithm is pretty dumb. It's 'greater than 4'.
+* +mime_type/1+ lets you specify the type of a resource, so if your javascript file is named bunny.poo for some strange reason, you can still load it as javascript. I believe the documentation is wrong, it's + mode.
 
 The other bit of magic we need is to declare that we need the resource. Since the declaration's a DCG we can just stick it in the termerized HTML.
 
@@ -1472,8 +1459,50 @@ A useful tool for debugging resource dependencies is to turn on debug(html(scrip
 and monitor in the debug message window.
 
 ****
-Exercise: Use highcharts (http://www.highcharts.com/) to put a chart on a web page. Include all needed material with resources. 
+Exercise: 
+Use highcharts (http://www.highcharts.com/) to put a chart on a web page. Include all needed material with resources. 
+****
 
+Adding mime type handlers
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+File extensions are a (not very good, but universal) way to indicate content type. To get the actual mime type we can use +file_mime_type/2+
+
+----
+2 ?- file_mime_type('foo.js', X).
+Correct to: "mimetype:file_mime_type('foo.js',X)"? yes
+X = text/javascript.
+
+3 ?- file_mime_type('foo.txt', X).
+Correct to: "mimetype:file_mime_type('foo.txt',X)"? yes
+X = text/plain.
+
+4 ?- file_mime_type('foo.xlsx', X).
+Correct to: "mimetype:file_mime_type('foo.xlsx',X)"? yes
+X = application/unknown.
+----
+
+Hmm... seems SWI-Prolog isn't willing to admit that xlsx is an Excel spreadsheet.  
+
+If you need it to work, you can override mime:mime_extension/2
+
+Now you have two ways of getting the mime type of a file - through file_mime_type or through the resource definition mime_type option. With the mime type, can we add other types of resources?
+
+Sure! You're in SWI-Prolog. Add a clause to the hook DCG +mime_include//2+ and generate some tokenized HTML. Here's a way to import a prolog script (useful with pengines)
+
+----
+:- multifile
+    html_head:mime_include//2.
+
+html_head:mime_include(text/'x-prolog', Path) --> !,
+    html(script([ type('text/x-prolog'),
+                  src(Path)
+                ],  [])).
+----
+
+There are a number of web resources you might need - perhaps your page needs some XML definition, or XSL fonts with the @import mechanism, or maybe some compile after load script language. Whatever you need to send, you can do it with the resource manager.
+
+****
 Exercise (harder): Use mime_include//2, and file_mime_type/2 
 Coffeescript is a preprocessor that takes in .coffee files and emits javascript. 
 Assume your make system generates an associated .js file with a parallel name in the same directory.
@@ -1488,12 +1517,14 @@ Double extra credit: Make these for all the preprocessor languages, make them ro
 7_3 Some +head+ Related Bits - Dynamic Javascript, AJAX, and XHTML
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+DONE TO HERE
 
 TODO javascript quasiquotes and dicts
 
-No file for this section.
 
-I want this tutorial to focus on understanding concepts. So I'm going to simply mention that there are http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.18%27,swi%28%27/doc/packages/http.html%27%29%29[DCGs to create Javascript calls] and to support doing AJAX with http://www.swi-prolog.org/pldoc/doc_for?object=section%282,%275%27,swi%28%27/doc/packages/http.html%27%29%29[JSON handlers]
+I want this tutorial to focus on understanding concepts. So I'm going to simply mention that there are http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.18%27,swi%28%27/doc/packages/http.html%27%29%29[DCGs to create Javascript calls] 
+
+and to support doing AJAX with http://www.swi-prolog.org/pldoc/doc_for?object=section%282,%275%27,swi%28%27/doc/packages/http.html%27%29%29[JSON handlers]
 
 By default SWI-Prolog puts out HTML5. If you're in a bizarre environment you might want to put out XHTML. Call
 

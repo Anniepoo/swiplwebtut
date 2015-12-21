@@ -15,7 +15,7 @@ http:location(files, '/f', []).
 
 % this serves files from the directory assets
 % under the working directory
-:- http_handler(files(.), http_reply_from_files('assets', []), [prefix]).
+:- http_handler(files(.), http_reply_from_files(assets, []), [prefix]).
 
 server(Port) :-
         http_server(http_dispatch, [port(Port)]).
