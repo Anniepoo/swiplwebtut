@@ -674,6 +674,23 @@ becomes
 class="emphasize left question"
 ----
 
+This bit about namespaces is slightly esoteric, feel free to skip down to the next exercises if not of interest.
+
+Attributes in other namespaces look like this. This is fairly rare in html, it shows up when mixing in XML or RDF related stuff. Here we have elgin:advisory. Note that, surprisingly, HTML5 doesn't "know" about namespaces, and adding them to the html tag is invalid. Colon is a normal character in attributes in HTML5.
+
+----
+html(div([class(Classes), elgin:advisory(ToolSet)],
+     [img([class('el-tool-image'), elgin:advisory(ToolSet), alt(Alt), title(Alt), src(Image)]),
+     \subtools(ToolSet)]
+    )).
+----
+
+If you're in XHTML dialect you can add namespaces with +xhtml_ns//2+. By default SWI-Prolog puts out HTML5. To put out XHTML do
+
+----
+    html_set_options([dialect(xhtml)])
+----
+
 This section's certainly long, but it's the core of the tutorial. Still, lets break and do a few exercises to absorb what we've learned.
 
 .html exercises
@@ -1285,9 +1302,9 @@ One bit of security here. You don't want to serve something outside the served s
 
 With finding files in various places and whatnot, interestingly, the SWI-Prolog website's code to serve static assets is a good page long, much of it involved in displaying txt files by converting to html.
 
-Hey, what happens if you ask for the directory?There's a kumquat in there!
+Hey, what happens if you ask for the directory? There's a kumquat in there!
 
-Gives a directory listing just like a real web server, even if it *is* in a language that's only used for AI. 
+Gives a directory listing just like a real web server, even if it *is* in a language that's only used for AI (wink wink). 
 
 And, for the record, you can make an index.html page just like normal. Browse http://127.0.0.1:8080/f/
 
@@ -1507,58 +1524,125 @@ Exercise (harder): Use mime_include//2, and file_mime_type/2
 Coffeescript is a preprocessor that takes in .coffee files and emits javascript. 
 Assume your make system generates an associated .js file with a parallel name in the same directory.
 
-Create a module that lets you require a coffeescript file. After loading your code, a programmer should only need to +\html_requires(js('somescript.coffee'))+ to invoke the coffeescript compiler and load the resulting js file into an appropriate meta tag.
+Create a module that lets you require a coffeescript file. After loading your code, a programmer should only need to +\html_requires(js(\'somescript.coffee'))+ to invoke the coffeescript compiler and load the resulting js file into an appropriate meta tag.
 
 Extra credit: eliminate the blind dependence on the external build. Check for the absence of the js file or an older timestamp, and invoke the compiler as needed.
 
 Double extra credit: Make these for all the preprocessor languages, make them robust (eg use a setting to find the preprocessor's command line), and bundle them as a pack. If no one has done so first, publish your pack on swi-prolog.
 ****
 
-7_3 Some +head+ Related Bits - Dynamic Javascript, AJAX, and XHTML
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Javascript and JSON
+-------------------
 
-DONE TO HERE
+Including Dynamic Javascript
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TODO javascript quasiquotes and dicts
+There is an older predicate based system for creating dynamic Javascript. It's deprecated in favor of quasiquotes.
 
-
-I want this tutorial to focus on understanding concepts. So I'm going to simply mention that there are http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.18%27,swi%28%27/doc/packages/http.html%27%29%29[DCGs to create Javascript calls] 
-
-and to support doing AJAX with http://www.swi-prolog.org/pldoc/doc_for?object=section%282,%275%27,swi%28%27/doc/packages/http.html%27%29%29[JSON handlers]
-
-By default SWI-Prolog puts out HTML5. If you're in a bizarre environment you might want to put out XHTML. Call
+Quasiquotes let you insert another language into the midst of Prolog code. Handling Javascript is an obvious application.
 
 ----
-    html_set_options([dialect(xhtml)])
+?3 ?- use_module(library(http/js_write)).
+true.
+
+4 ?- Y=7, X = {|javascript(Y)||$(function(Y){ console.log(Y); }); |}.
+Y = 7,
+X = \['$(function(', \js_expression(7), '){ console.log(', \js_expression(7), '); }); '].
 ----
 
-before you start the server (this also sets the emitted DocType).
+You probably want that surrounded with a +<script>+ tag.
 
-TODO - need a whole chapter - communicating with the server
-TODO - section numbers duplicated
-8.1 - javascript quasiquotes
-8.2 - AJAX
-8.3 - pengines
-8.4 - CORS
+----
+\js_script({|javascript(X)|| console.log(X); |})
+----
 
-8 Authentication
+The javascript parsing doesn't allow placing variables in all the places you might like. If it's fighting you you'll have to use +\[ ]+ and give up syntax checking.
+
+JSON
+~~~~
+
+There are two sets of JSON handling tools. The older set predates dicts in SWI-Prolog.
+
+The older set reads and writes serialized JSON to objects of the form +json( ... list of key=value pairs... )+ using +json_read/3+ and +json_write/3+. The http client library contains a http://www.swi-prolog.org/pldoc/man?section=httpjson[plugin] for reading JSON from http.
+
+Since this isn't a very natural representation for Prolog, theres' a http://www.swi-prolog.org/pldoc/man?section=jsonconvert[library to convert between the json(list) format and Prolog terms].
+
+With dicts, all this improves. There are new json_read_dict/2 , json_read_dict/3 ,  json_write_dict/2 , json_write_dict/3 ,  which use dicts, so the whole thing with two representations goes away.
+
+Here's a simple REST server.
+
+----
+:- http_handler(/api, handle_api, []).
+
+handle_api(Request) :-
+	http_read_json_dict(Request, Query),
+	solve(Query, Solution),
+	reply_json_dict(Solution).
+----
+
+Communicating With The Server
+-----------------------------
+
+AJAX
+~~~~
+
+As we've just seen, we can accept and return JSON, so we can implement AJAX, but there are other ways.
+
+****
+Exercise:
+Build a small web page based on http://www.highcharts.com/stock/demo/basic-line[Highstock's line chart demo] that displays a real time graph of
+the number of bytes used in the heap, using http://www.swi-prolog.org/pldoc/man?predicate=statistics/2[statistics/2] and AJAX.
+
+Note - yes, this exercise involves repeats of previous material. It's skill building.
+****
+
+Pengines
+~~~~~~~~
+
+Pengines is a rather nifty distributed computing system by Torbjorn Lager that ships with SWI-Prolog. 
+
+Its so nifty I'm going to do a 'real world' tutorial just on Pengines, so I'll just mention it here.
+
+Pengines allows the client to run queries in a sandboxed environment on the server. This gives the client the full expressive power of Prolog as a query language.
+
+It's also a heck of a lot easier than any other way of making AJAX like behavior.
+
+For now, you can check out my talk about pengines at https://www.youtube.com/watch?v=JmOHV5IlPyU[Strange Loop 2014].
+
+WebSockets
+~~~~~~~~~~
+
+SWI-Prolog has built-in support for WebSockets. If you want to do a collaborative application check out http://www.swi-prolog.org/pldoc/doc_for?object=section%282,%275%27,swi%28%27/doc/packages/http.html%27%29%29[WebSocket Support]
+
+CORS
+~~~~
+
+http://www.w3.org/TR/cors/[Cross-Origin Resource Sharing] is the useful technique of serving AJAX-y data from a different server than the page itself. It's also well documented as a https://en.wikipedia.org/wiki/Cross-site_scripting[security risk].
+
+You can turn CORS on for a specific handler just by including +cors_enable/0+ in the handler, and setting the domain list to which we'll serve foreign resources in the setting +http:cors+ . For more info, check out http://www.swi-prolog.org/pldoc/man?section=httpcors[The CORS library docs] .
+
+Authentication
 ----------------
 
-TODO - basic authentication too
+Basic Authentication
+~~~~~~~~~~~~~~~~~~~~
 
-authentication, cors, openid
+The old fashioned password protect on pages using a dialog produced by the browser is called _basic authentication_.
 
-This is a work in progresss. This chapter is still TODO.
+It's easy to implement. The http://www.swi-prolog.org/pldoc/man?section=httpauthenticate[basic authentication library] takes a Unix style htpasswd file and lets you authenticate users.
 
-But know that you can deal with cross site resources, basic authentication, and OpenID via SWI libraries.
+Our sample +webserverbasicauthenticate.pl+ looks for a valid authentication based on a file called passwd. It also has a couple predicates to create a new passwd file and add names to it.  To use, query  +start_pw_file.+ , which makes the username *adminuser* with password *adminpw*. To add users, query add_uname_pw.  Start the server and it will accept the user (the example doesn't gracefully handle a missing passwd file).
+
+OpenID
+~~~~~~
+
+This section is still to be done. Sorry, I want to get this out.
 
 9 Running The Server
 --------------------
 
 9_1 Server Top Level
 ~~~~~~~~~~~~~~~~~~~~
-
-(no file)
 
 Til now we've given you this block of voodoo code:
 
@@ -1606,8 +1690,6 @@ server(Port) :-
 9_2 Serving on port 80
 ~~~~~~~~~~~~~~~~~~~~~~
 
-(no file)
-
 The simplest way to get your server onto port 80 to serve to the world is to have Apache reverse proxy.  if your server is on port 8000, add this to site.conf
 
 ----
@@ -1618,12 +1700,13 @@ ProxyPassReverse /myserver/ http://localhost:8000/myserver/
 Note that this means absolute URLs in HTML content should be relative.
 
 ****
-
-Exercise: If you have access to a server, set 5_1 up to be served from port 80.
+Exercise: Set 5_1 up to be served from port 80 in your local environment.
 ****
 
 10 Handling The Back End
 ------------------------
+
+DONE TO HERE
 
 10_1 SQL
 ~~~~~~~~
@@ -1636,19 +1719,16 @@ ____
 The value of RDMS for Prolog is often over-estimated, as Prolog itself can manage substantial amounts of data. Nevertheless a Prolog/RDMS interface provides advantages if data is already provided in an RDMS, data must be shared with other applications, there are strong persistency requirements or there is too much data to fit in memory. 
 ____
 
+Now, I think if we asked Jan, he'd say the last, 'persistency requirements' and 'too much data for memory' are better addressed with other solutions like http://cliopatria.swi-prolog.org/home[ClioPatria]
 
-Now, I think if we asked Jan, he'd say the last, 'persistency requirements' and 'too much data for memory' are better addressed with other solutions like <a href="http://cliopatria.swi-prolog.org/home">ClioPatria</a>.
-
-But, if you need an SQL database, SWI-Prolog has a reasonable <a href="http://www.swi-prolog.org/pldoc/package/odbc.html">ODBC Interface</a>
+But, if you need an SQL database, SWI-Prolog has a reasonable http://www.swi-prolog.org/pldoc/package/odbc.html[ODBC Interface]
 
 ****
 Exercise: Connect to whatever DB you have handy in your local environment and read out part of an existing table using SWI-Prolog.
 ****
 
-10_2 Slightly Sick System
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-(no file)
+10_2 Persistancy
+~~~~~~~~~~~~~~~~
 
 Are you in startup mode, or an experimental or 'fooling around' project? Want to save writing a back end? Here's a trick that's completely reasonable and saves half your dev time.
 
