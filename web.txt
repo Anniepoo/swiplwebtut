@@ -167,10 +167,12 @@ The second argument will be called with +call(Arg, Request)+, where Request is t
 :- http_handler('/something/pleasant', my_handler_code(pleasant), []).
 :- http_handler('/something/painful', my_handler_code(painful(normal)), []).
 :- http_handler('/something/very/painful', my_handler_code(painful(very)), []).
-:- http_handler('/something/incredibly/painful', my_handler_code(painful(incredibly)), []).
+:- http_handler('/something/incredibly/painful', 
+		my_handler_code(painful(incredibly)), []).
 
 my_handler_code(WhatToSay, Request) :-
-    in here WhatToSay will be bound to pleasant, painful(normal), painful(very), or painful(incredibly)
+    in here WhatToSay will be bound to pleasant, painful(normal), 
+	painful(very), or painful(incredibly)
     and Request is a complex term that represents the httprequest (covered later)
 ----
 
@@ -408,7 +410,8 @@ We can serve HTML just by printing it.
 
 ----
 say_hi(_Request) :-
-        format('Content-type: text/html~n~n'),   format('&lt;html&gt;&lt;head&gt;&lt;title&gt;Howdy&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h2&gt;A Simple Web Page&lt;/h2&gt;&lt;p&gt;With some text.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;~n').
+        format('Content-type: text/html~n~n'),   
+		format('<html><head><title>Howdy</title></head><body><h2>A Simple Web Page</h2><p>With some text.</p></body></html>~n').
 ----
 
 Ouch!
@@ -902,9 +905,9 @@ Then you get this bright idea. You could make your site look really awesome by u
 	start_hand_drawn_box, ... contents, \end_hand_drawn_box
 ----
 
- but that's ugly - it doesn't express the containment structure.
+but that's ugly - it doesn't express the containment structure.
 
- So we write an inclusion DCG that takes some termerized html as an argument and adds the html around it to make the hand drawn look.
+So we write an inclusion DCG that takes some termerized html as an argument and adds the html around it to make the hand drawn look.
 
 ----
 hand_drawn_box(InnerHTML) -->
@@ -1184,7 +1187,7 @@ POST is often used to send large chunks of data not in search string format. Exa
 Contrary to the statement at the top of the SWI-Prolog page, POST requests are not transparently handled. If you're handling a POST request you'll need to add the +form_data+ option to the +http_parameters/3+ form. Additionally, the code apparently reads the POST data once, and can't backtrack. 
 
 Advanced Parameter Tricks
-~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A semi-useful tool for websites that shove many of the same parameters around is the +attribute_declarations+ option of +http_parameters/3. This allows you to define how to validate various parameters in one place.
 
@@ -1317,7 +1320,7 @@ Change the timeout for how long sessions last
 ****
 
 Handler ID's
------------------------
+------------
 
 .Handler ID example
 [NOTE]
@@ -1492,14 +1495,14 @@ Exercise: Modify static_files_example.pl to serve javascript, css, and image fil
 ****
 
 Redirect
-~~~~~~~~~~~~
+~~~~~~~~
 
 You're probably wondering what happened to redirects. If you're used to the old 'not signedin, redirect' paradigm, you need it. But, actually, instead of a redirect, consider calling the handler of the page you're redirecting to. 
 
 If you need a real redirect, use http://www.swi-prolog.org/pldoc/doc_for?object=http_redirect/3[+http_redirect/3+]
 
-7 Including Resources
----------------------
+Including Resources
+-------------------
 
 Well, we can serve files, now lets get them included in our web pages.
 
