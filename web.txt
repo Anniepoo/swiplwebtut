@@ -292,7 +292,9 @@ Your server will some day probably be proxied to by apache, so your root path ma
 ****
 Exercise
 Change the setting and confirm it works
+
 Question
+
 Does it still serve at the old location?
 ****
 
@@ -2100,7 +2102,7 @@ Security Checklist
 * Don't include +library(http/http_errors.pl)+ in production to make hacker's jobs harder
 
 Enlightened Self Interest
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage you to make a project with the SWI tools. At the end of the course there's a plea for people to help with a library of web patterns. If you don't have a specific project, you might consider doing that.
 
