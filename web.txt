@@ -874,6 +874,18 @@ ____
 These quotations produce a DOM term that is suitable for html//1 and other predicates that are declared to consume this format. 
 ____
 
+-----
+?- use_module(library(http/html_write)).
+true.
+
+4 ?- X = hello,Y = {|html(X)||<h1>X</h1>|}.
+X = hello,
+Y = [element(h1, [], [hello])].
+
+5 ?- Y = {|html(X)||<h1>X</h1>|}.
+Y = [element(h1, [], [X])].
+-----
+
 The funny list with element/3 term in it is the format SWI-Prolog represents SGML in. But usually you won't care about that.
 
 If you want to insert some normal HTML boilerplate in the midst of a mass of termerized html, do it like this:
@@ -1872,7 +1884,7 @@ Exercise: Set 5_1 up to be served from port 80 in your local environment.
 10 Handling The Back End
 ------------------------
 
-Your web application will presumably need a persistant store on the back end. You have a number of options.
+Your web application will presumably need a persistent store on the back end. You have a number of options.
 
 SQL
 ~~~
@@ -1891,12 +1903,12 @@ But, if you need an SQL database, SWI-Prolog has a reasonable http://www.swi-pro
 Exercise: Connect to whatever DB you have handy in your local environment and read out part of an existing table using SWI-Prolog.
 ****
 
-Persistancy
+Persistency
 ~~~~~~~~~~~
 
-The persistancy lib is a very neat alternative to a database.
+The persistency lib is a very neat alternative to a database.
 
-As memory size has grown, the idea of simply keeping the database in memory has become feasible. The persistancy library provides automatic backup to disk.
+As memory size has grown, the idea of simply keeping the database in memory has become feasible. The persistency library provides automatic backup to disk.
 
 Using the library is easy.  Using the +persistent/1 declaration you can set up a structure similar to a database record.
 
@@ -1920,10 +1932,10 @@ Of course you'll want to attach a file so the library persists to disk. Attachin
 You'll need to decide when to sync the database. 
 
 
-Simply use the prolog persistancy lib to snapshot your data. See http://www.swi-prolog.org/pldoc/doc/swi/library/persistency.pl[+persistance/1+]
+Simply use the prolog persistency lib to snapshot your data. See http://www.swi-prolog.org/pldoc/doc/swi/library/persistency.pl[+persistent/1+]
 
 ****
-Exercise: Implement a toy application using the persistancy lib.
+Exercise: Implement a toy application using the persistency lib.
 ****
 
 RDF
