@@ -1053,6 +1053,9 @@ user:body(tut_style, Body) -->
 
 Observation here - what's coming in is *tokenized* HTML.
 
+user:head
+~~~~~~~~~
+
 You can do the same thing with the head. Add a hook predicate for user:head. This is a possible, but rarely the best, method of including Javascript and CSS. More often, it's a great way to get things like the title and keywords set up.
 
 Of course you can have more than one style. At my employer we use one style for content to be viewed on the web and one style for content to be viewed in the virtual world.
@@ -1063,6 +1066,15 @@ Add a header and footer to your web page from the +html//1+ exercises using body
 
 Exercise:
 Make a pair of web pages that have some main content and some 'ads' (feel free to just make a div and some text for the ads) served from /free  and the same content without ads served from /paid. Minimize repeated code.
+
+Exercise (small project):
+Metadata like keywords is often treated as 'somebody elses job' by both web designers and engineers. 
+
+Build a few simple pages that share a style, imagining this could be a large, complex web application. 
+
+Now add a module that makes adding proper keywords to the pages easy. The system should, at minimum, collect a set of keywords that appear on every page, plus a set of per-page specific keywords and enforce that this information is provided for every page. Handle keywords and description attributes. 
+
+Other useful features would include allowing definition of 'topics' that recursively expand to keywords, handling robot exclusion, the robot attribute, and keyword omission for pages that should not be indexed.
 
 ****
 
