@@ -371,10 +371,10 @@ simple-template::
    Simple-template by Raivo Laanemets (installable as a pack, or at https://github.com/rla/simple-template ) enforces the strictest separation of logic and formatting. Simple-template doesn't allow prolog code in the template.
 Prolog Web Pages::
    PWP is the most asp/jsp like, with the advantage that it's well formed XML. http://www.cs.otago.ac.nz/staffpriv/ok/pwp.pl
-+html//4+::
++html//1+::
    Prolog syntax DCG based HTML generation. Part of the SWI-Prolog distribution.
 
-This chapter is about the built in SWI-Prolog HTML generation support using +html//4+, which is firmly in the 'dynamic' camp. PWP and Raivo's simple-template systems both have excellent documentation. I see no point in repeating them here.
+This chapter is about the built in SWI-Prolog HTML generation support using +html//1+, which is firmly in the 'dynamic' camp. PWP and Raivo's simple-template systems both have excellent documentation. I see no point in repeating them here.
 
 If you pitch your tent in the template camp, SWI-Prolog provides support for it http://www.swi-prolog.org/pldoc/doc_for?object=section%283,%273.21%27,swi%28%27/doc/packages/http.html%27%29%29[integrating PWP] .
 
@@ -864,7 +864,7 @@ my_headline(X) -->
 	html({|html(X)||<h1>X</h1>|}).
 ----
 
-Notice we've passed it to html//1. That's usually what you'll do with it.
+Notice we've passed it to +html//1+. That's usually what you'll do with it.
 
 But what's it compile into?
 The SWI-Prolog docs say 
@@ -1068,13 +1068,17 @@ Exercise:
 Make a pair of web pages that have some main content and some 'ads' (feel free to just make a div and some text for the ads) served from /free  and the same content without ads served from /paid. Minimize repeated code.
 
 Exercise (small project):
-Metadata like keywords is often treated as 'somebody elses job' by both web designers and engineers. 
+Metadata like keywords is often treated as 'somebody elses job' by both web designers and engineers. For an explanation of the HTML META element, see https://en.wikipedia.org/wiki/Meta_element
 
 Build a few simple pages that share a style, imagining this could be a large, complex web application. 
 
 Now add a module that makes adding proper keywords to the pages easy. The system should, at minimum, collect a set of keywords that appear on every page, plus a set of per-page specific keywords and enforce that this information is provided for every page. Handle keywords and description attributes. 
 
 Other useful features would include allowing definition of 'topics' that recursively expand to keywords, handling robot exclusion, the robot attribute, and keyword omission for pages that should not be indexed.
+
+One important consideration is enforcing that the metadata gets entered for every page. Imagine this project is being done by a small company, and consider what the workflow will be. When a page is added to the site, it should trigger some process that results in a human adding the appropriate keywords. Consider how you will enter the actual keywords. Think about larger software engineering issues. For example, this might be the responsibility of someone nontechnical who maintains a CSV file via a spreadsheet, or it might simply throw when the keywords are missing, inducing the developer to add them. 
+
+The relative transparency of how the framework works encourages this sort of useful separation of concerns, an advantage of a more expressive language like SWI-Prolog.
 
 ****
 
@@ -1089,7 +1093,7 @@ This section uses file mailman_example.pl
 
 http://www.swi-prolog.org/pldoc/doc_for?object=section%284,%273.17.2%27,swi%28%27/doc/packages/http.html%27%29%29'[Mailman] is a facility for creating HTML that ultimately ends up somewhere besides where you generated it. It has nothing to do with email. 
 
-We're covering it with styling because i'ts often used to place content in the head, but it has a lot of other uses.
+We're covering it with styling because it's often used to place content in the head, but it has a lot of other uses.
 
 Often it's a lot easier to generate a page in an order other than the final lexical order of the html.
 
