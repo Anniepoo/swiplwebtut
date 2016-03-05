@@ -1812,6 +1812,39 @@ You can turn CORS on for a specific handler just by including +cors_enable/0+ in
 Authentication
 --------------
 
+Need to control access to your web application?
+
+The 'usual' way these days is a login form, something that doesn't really require support from the underlying web framework.
+
+An older, simpler scheme is basic or digest authentication, a part of the HTTP protocol. The newest way is through OpenID. We'll look at basic and digest authentication first.
+
+Basic and digest authentication work more or less the same. The difference is that digest authentication doesn't transmit the password in the clear.
+
+Both look for an authentication header in the request. If it's not there, they respond with a 401 Unauthorized status, which makes the browser pop up the authentication dialog box like this
+
+image:authentication.png
+
+The browser then sends the request again, with the authentication header.
+
+The authentication header looks like (for basic authentication)
+
+----
+WWW-Authenticate: Basic realm="harbinger_realm"
+----
+
+So what's this realm thing?
+
+You might want to have different logins for different areas of the server - e.g. one for general users, one for administrators.
+
+You can specify two different _realms_ to make the user have to log in to each one. 
+
+[NOTE]
+=====
+Pro-tip - The realm value appears on the dialog. If you choose a name like +'Enter username and password for admin access'+ you can somewhat improve the not great wording of the dialog box.
+=====
+
+With the theory out of the way, lets look at how to implement each in SWI-Prolog.
+
 Basic Authentication
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -1821,11 +1854,52 @@ Basic Authentication
 This section uses file basic_authenticate_example.pl
 =====
 
-The old fashioned password protect on pages using a dialog produced by the browser is called _basic authentication_.
+Basic authentication is easy to implement. The http://www.swi-prolog.org/pldoc/man?section=httpauthenticate[basic authentication library] takes a Unix style htpasswd file and lets you authenticate users against it.
 
-It's easy to implement. The http://www.swi-prolog.org/pldoc/man?section=httpauthenticate[basic authentication library] takes a Unix style htpasswd file and lets you authenticate users.
+Our sample +basic_authenticate_example.pl+ looks for a valid authentication based on a file called passwd. It also has a couple predicates to create a new passwd file and add names to it.  
 
-Our sample +basic_authenticate_example.pl+ looks for a valid authentication based on a file called passwd. It also has a couple predicates to create a new passwd file and add names to it.  To use, query  +start_pw_file.+ , which makes the username *adminuser* with password *adminpw*. To add users, query add_uname_pw.  Start the server and it will accept the user (the example doesn't gracefully handle a missing passwd file).
+To use, query  +start_pw_file.+ , which makes the username *adminuser* with password *adminpw*. To add users, query add_uname_pw.  Start the server and it will accept the user (the example doesn't gracefully handle a missing passwd file).
+
+Now that you have a password file, run the server by querying +server(9000)+ and browsing http://localhost:9000/ .
+*Instead of answering the dialog, cancel it*. You'll see a SWI generated warning page. Here's the code that does the work.
+
+----
+	(   http_authenticate(basic(passwd), Request, _Fields)
+	->  true
+	;   throw(http_reply(authorise(basic, harbinger_realm)))
+	),
+----
+
+If the +authentication/1+ term exists in +Request+ and matches a line in the file +passwd+, we're logged in and we continue on to serve the page.
+If the +authentication/1+ term is missing or invalid, we throw http_reply(authorise(basic, harbinger_realm)). SWI sends the 401 status and the browser brings up the dialog.
+If the user cancels, http_dispatch responds with a not authorized page.
+
+[NOTE]
+=====
+After you correctly answer it becomes hard to fiddle with the example. You can run the server on another port to convince the browser it's talking to a different server
+=====
+
+An Easier Way
+^^^^^^^^^^^^^
+
+This seems like more than we need to 'say' as programmers. We really just need a password file and realm name. This being Prolog, of course the easier way is available.
+
+----
+:- http_handler('/easier', say_easier, [authentication(basic(passwd, unguent_realm))]).
+----
+
+Digest Authentication
+~~~~~~~~~~~~~~~~~~~~
+
+The biggest problem with basic authentication is that the credentials the user enters are transmitted in the clear.
+
+The correction for this was digest authentication.
+
+You can get digest authentication by the same API as basic authentication. 
+
+----
+:- http_handler('/', say_hi, [authentication(digest(passwd, lemon))]).
+----
 
 OpenID
 ~~~~~~
