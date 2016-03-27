@@ -1768,6 +1768,21 @@ handle_api(Request) :-
 	reply_json_dict(Solution).
 ----
 
+There's one complication here. By default, the +http_read_json_dict/2+ is pretty strict about mime type, only accepting +application/json+ .
+
+The problem is that actual browsers send various types. You can expand the list of types accepted with  the multifile +json_type/1+ .
+
+----
+:- use_module(library(http/http_json)).
+
+:- multifile http_json/1.
+
+http_json:json_type('application/x-javascript').
+http_json:json_type('text/javascript').
+http_json:json_type('text/x-javascript').
+http_json:json_type('text/x-json').
+----
+
 Communicating With The Server
 -----------------------------
 

@@ -34,6 +34,7 @@
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/html_write)).
 :- use_module(library(http/http_error)).
+:- use_module(library(pprint)).
 
 http:location(openid, root(openid), []).
 
@@ -161,8 +162,8 @@ user_page(Request) :-
 		 *		DEBUG		*
 		 *******************************/
 
-:- http_handler(root(.), print_request, [prefix]).
+% :- http_handler(root(.), print_request, [prefix]).
 
 print_request(Request) :-
 	format('Content-type: text/plain~n~n'),
-	pp(Request).
+	print_term(Request).
