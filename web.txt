@@ -2,7 +2,8 @@ Tutorial -- Creating Web Applications in SWI-Prolog
 ===================================================
 Anne Ogborn <annie66us@yahoo.com>
 :Author Initials: AO
-:Revision: 1.2.0
+:Revision: 1.2.2
+:Revision: 1.2.2
 :Date:  Dec 20, 2015
 :toc2:
 :icons:
@@ -1631,7 +1632,7 @@ So, our page requires some special bit of css in specialstyle.css, which depends
 :- html_resource(files('specialstyle.css'), [requires(files('gradstyle.css'))]).
 ----
 
-The first arg is a standard path, as an URI or abstract path. The second is a +properties+ list. The most useful is requires, which takes another resource path (abstract path here) or a list of such.
+The first arg is a standard path, as an URI or abstract path. The second is a +properties+ list. The most useful is requires, which takes another resource path, one of a resource name, an abstract path or an URI. If there is more than one required resource, pass them as a list. Use the +ordered(true)+ option to enforce their being loaded in the list order.
 
 There are a few other very useful options. 
 
