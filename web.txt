@@ -265,7 +265,7 @@ IMPORTANT: The path to the root of *files* (second arg) is an absolute path spec
 http:location(files, '/f', []).
 ----
 
-Also notice that +location+ is arity 3. It takes a list of options, the only valid option being +priority(+:integer)+ which is used to disambiguate multiple handlers that handle the same URI. This is useful for defining a fallback handler for prefix of / to make a custom 404 page.
+Also notice that +location+ is arity 3. It takes a list of options, the only valid option being +priority(+:integer)+ which is used to disambiguate multiple handlers that handle the same URI. This is useful for defining a fallback handler for prefix of / to make a custom 'not found' page instead of 404ing, and for overriding portions of the URI space.
 
 IMPORTANT: I was tryig to make these 'abstract paths' be abstract files paths for a long time when learning this stuff. Beware, the two have nothing to do with each other. To make things worse, later on we'll encounter them used together.
 
@@ -1492,37 +1492,75 @@ So, what happens if we ask for something that's not there?  Try http://127.0.0.1
 
 Hmm... that's not so good. Nasty error message.
 
-In a previous exercise we made a handler for everything else, but that responded with a page (a 200 response). Lets make a real 404.
+Hey, speaking of error messages, that default error page isn't going to fly in production.
 
-404 response
-~~~~~~~~~~~~
+Custom Error Pages
+~~~~~~~~~~~~~~~~~~
 
-.404 example
+.Custom Error Page example
 [NOTE]
 =====
-This section uses file error_response_example.pl
+This section uses file custom_status_page.pl
 =====
 
-When we can't do what we're asked, we fail. Can't serve a file at http://127.0.0.1:8080/f/robot.png, so we fail.
+When we ask for a nonexistant page, or when the handler fails or throws an exception, the framework displays a default status page.
+
+We can customize the status page by defining a hook predicate.
 
 ----
-serve_files(Request) :-
-     http_reply_from_files('assets', [], Request).
+	:- use_module(library(http/http_header)).
+
+	:- multifile http:status_page/3.
+
+	http:status_page(not_found(URL), _Context, HTML) :-
+		phrase(page([ title('Sorry, no such page')
+				],
+				{|html(URL)||
+	<h1>Sorry, no such page</h1>
+	<p>I'm afraid you asked for a page we do not have.  Please try the
+	search box to locate the page you are looking for.
+				|}),
+			   HTML).
 ----
 
-Instead of an ugly error lets do the right thing and serve a 404
+The first argument to +http:status_page/3+ will be one of these statuses, which map to the text version of the various HTTP statuses.
+
+For example, to override 500 status errors, unify the first term with +server_error(_)+.
 
 ----
-serve_files(Request) :-
-     http_reply_from_files('assets', [], Request).
-serve_files(Request) :-
-      http_404([], Request).
+	%	   - authorise(Method)
+	%	     Challenge authorization.  Method is one of
+	%	     - basic(Realm)
+	%	     - digest(Digest)
+	%	   - authorise(basic,Realm)
+	%	     Same as authorise(basic(Realm)).  Deprecated.
+	%	   - bad_request(ErrorTerm)
+	%	   - `busy`
+	%	   - created(Location)
+	%	   - forbidden(Url)
+	%	   - moved(To)
+	%	   - moved_temporary(To)
+	%	   - `no_content`
+	%	   - not_acceptable(WhyHtml)
+	%	   - not_found(Path)
+	%	   - method_not_allowed(Method, Path)
+	%	   - `not_modified`
+	%	   - resource_error(ErrorTerm)
+	%	   - see_other(To)
+	%	   - switching_protocols(Goal,Options)
+	%	   - server_error(ErrorTerm)
+	%	   - unavailable(WhyHtml)
 ----
+
+So now we have nice professional looking error pages.
 
 ****
 Exercise: How would you make a 'site offline' function that the NOC staff could control?
 
 Exercise: Modify static_files_example.pl to serve javascript, css, and image files from 3 separate directories.
+
+Exercise: extend the custom_status_page.pl file to have a second link to a page that exists, but does a divide by zero in it's handler.
+Give your server a nice 500 error page.
 ****
 
 Redirect
@@ -1640,6 +1678,8 @@ There are a few other very useful options.
 * +ordered(true)+ makes sure the resources get loaded in the right order.
 * +aggregate/1+ is supposed to be for situations where you might need only a small part of a large file. If you have a big css file with sections A, B, C, and D, and four smaller files A,B,C, and D, and you load the big one in one place, you don't need the smaller ones. The 'a number of' algorithm is pretty dumb. It's 'greater than 4'.
 * +mime_type/1+ lets you specify the type of a resource, so if your javascript file is named bunny.poo for some strange reason, you can still load it as javascript. I believe the documentation is wrong, it's + mode.
+
+On larger projects I usuallay set up a virtual resource for each item, that in turn requires the real file. This way, if I change versions of jQuery I only have to change it in one place. 
 
 The other bit of magic we need is to declare that we need the resource. Since the declaration's a DCG we can just stick it in the termerized HTML.
 
