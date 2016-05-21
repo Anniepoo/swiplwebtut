@@ -1554,6 +1554,9 @@ For example, to override 500 status errors, unify the first term with +server_er
 
 So now we have nice professional looking error pages.
 
+If you need to make the server generate one of the other statuses, call +http_status_reply/4+ to generate the page. Notice that you need to do this at the handler level. I suspect there's a method of doing it by throwing an exception, but I don't know what it is.
+
+
 ****
 Exercise: How would you make a 'site offline' function that the NOC staff could control?
 
