@@ -42,7 +42,7 @@ Prolog is of course more associated with expert systems and torturing undergradu
 
 Prolog programs are simply *smaller* . Prolog programs are often *one tenth* the size of equivalent Java programs. And smallness is a virtuous cycle. Smallness encourages well written code, and well written code is easier to maintain and refactor and remains small.
 
-What makes Prolog systems small? Complex question, but we can identify various factors. With backtracking instead of control structures, Prolog eliminates the 90% of loops that are actually iterators. Backtracking often eliminates error handling. Partial binding and incomplete structures eliminate much data reformatting. And in general, there's just a lot more case based reasoning, which means a lot less ceremony associated with handling of edge conditions. And of course you can put a small reasoner in to figure out complex business logic like 'who'se allowed to edit this?'
+What makes Prolog systems small? Complex question, but we can identify various factors. With backtracking instead of control structures, Prolog eliminates the 90% of loops that are actually iterators. Backtracking often eliminates error handling. Partial binding and incomplete structures eliminate much data reformatting. And in general, there's just a lot more case based reasoning, which means a lot less ceremony associated with handling of edge conditions. And of course you can put a small reasoner in to figure out complex business logic like 'who's allowed to edit this?'
 
 The SWI-Prolog web app framework is very friendly. You can edit running code and query make. (C-c C-m in the IDE editor) and keep going without disturbing state, and you can use the graphic debugger.
 
