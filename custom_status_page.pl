@@ -31,3 +31,30 @@ http:status_page(not_found(URL), _Context, HTML) :-
 search box to locate the page you are looking for.
 		    |}),
 	       HTML).
+
+
+:- http_handler(root(throws), throws_handler, []).
+
+http:status_page(server_error(Error), _Context, HTML) :-
+	phrase(page([ title('Sorry Im Busted')
+		    ],
+		    {|html(Error)||
+<h1>Dang, an error happened</h1>
+<p>Oh fudge, error <b>Error</b> happened.</p>
+		    |}),
+	       HTML).
+
+throws_handler(_Request) :-
+	catch(
+	    _ is 1 / 0,
+	    E,
+	    (	debug(status_page, '~w', [E]),
+		throw(http_reply(server_error(E))))
+	).
+%	_ is 1 / 0.
+
+http:status_page(Oops, _Context, _HTML) :-
+	gtrace,
+	debug(status_page, 'status ~w~n', [Oops]),
+	fail.
+
