@@ -2265,8 +2265,6 @@ Security Checklist
 Enlightened Self Interest
 -------------------------
 
-The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage you to make a project with the SWI tools. At the end of the course there's a plea for people to help with a library of web patterns. If you don't have a specific project, you might consider doing that.
-
 The only way to really become competent with an API is to use it. So, just as much as exercises or this page, I encourage you to make a project with the SWI tools.
 
 I imagine many of you will have a project - it will be why you're doing this course. But if you don't, or if your 'real' project is going to be a large one and you don't want to start it while a new user, or you just feel like doing a bit of good in return for free internet stuff, consider this:
