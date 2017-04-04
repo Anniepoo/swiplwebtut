@@ -75,7 +75,7 @@ The example programs are labelled with a number scheme that once aligned with th
 
 Different people will have different backgrounds and learning styles. Whatever works for you works.
 
-http://www.swi-prolog.org/howto/http/'[This page] in the SWI-Prolog docs is useful as well
+http://www.swi-prolog.org/howto/http/[This page] in the SWI-Prolog docs is useful as well
 
 Getting Stuck
 ^^^^^^^^^^^^^
