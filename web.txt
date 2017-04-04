@@ -1271,6 +1271,10 @@ The documentation's pretty clear.
 
 Since this is all Jan's code, not mine, you'll need to query run. and then browse localhost:8080
 
+Multipart MIME uploads involve all sorts of insanity.  I refer you to 
+
+https://groups.google.com/forum/#!searchin/swi-prolog/file$20upload/swi-prolog/ABzhD4EKKAY/xj_nxVsKqxUJ[The mail list discussion] for the gory details.
+
 Sessions
 --------
 
@@ -1292,6 +1296,24 @@ This section uses file session_example.pl
 =====
 
 At this point you're probably fantasizing about all the stuff you can make in SWI-Prolog web, but you know you're going to have to track sessions.
+
+Sessions are ubiquitous on the web. I assume some of you understand sessions, but for those who don't -
+
+When a user visits a web page, they're handed a cookie, a code they're supposed to hand back to the server with the next page request. So you visit the fluffy bunnies site, and you're given 3472723
+
+You ask for another page, and your browser sends along cookie 3472723. The server knows you're user 3472723 and can customize the page for you. 
+
+The classic example of this is shopping carts. You click a link to put a beany baby in your shopping cart, and the server now has a data structure '3472723 has a beany baby in their shopping cart', and when it generates the page it puts '1' over the shopping cart icon.
+
+Eventually, of course, the server gets rid of the session. Usually after 30 minutes or so without hearing from the user.
+
+The example provided with the tutorial gives the user a silly name. Once the name's established, it will be used on
+subsequent visits as long as the session lasts. Most systems keep sessions about 30 minutes after the last activity
+(its settable in swi-prolog).
+
+Whats going on 'under the covers' is that the first httpRequest includes in its' response a set-cookie header with a
+random number. Subsequent requests pass this cookie back to the server, so the user gets a persistent identity.
+Now data can be associated with that identity using http_session_asserta and http_session_data
 
 Implementing session control is insanely simple. More fun than http://xkcd.com/353/[Python]
 
@@ -1554,8 +1576,15 @@ For example, to override 500 status errors, unify the first term with +server_er
 
 So now we have nice professional looking error pages.
 
-If you need to make the server generate one of the other statuses, call +http_status_reply/4+ to generate the page. Notice that you need to do this at the handler level. I suspect there's a method of doing it by throwing an exception, but I don't know what it is.
+Now, what if you need to generate the page?  For example, if you discover that someone is trying a forbidden operation deep in the code, you can 
 
+----
+    throw(http_reply(Term))
+----
+
+Where Term is one of the above.
+
+Alternatively, you can generate one of these pages yourself, using +http_status_reply/4+ to generate the page. Notice that you need to do this at the handler level.
 
 ****
 Exercise: How would you make a 'site offline' function that the NOC staff could control?
@@ -1963,7 +1992,7 @@ You can get digest authentication by the same API as basic authentication.
 OpenID
 ~~~~~~
 
-This section is still to be done. Sorry, I want to get this out, and I don't understand this myself.
+There is OpenID support.  It's complex enough it's not going to be covered in this tutorial.
 
 9 Running The Server
 --------------------
