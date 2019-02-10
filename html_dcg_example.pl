@@ -12,7 +12,7 @@
 % number of Prolog threads and then returns to the toplevel, so you can
 % (re-)load code, debug, etc.
 server(Port) :-
-        http_server(http_dispatch, [port(Port)]).
+  http_server(http_dispatch, [port(Port)]).
 
 /* The implementation of /. The single argument provides the request
 details, which we ignore for now. Our task is to write a CGI-Document:
@@ -25,11 +25,14 @@ tags. */
 
 say_hi(_Request) :-
 	phrase(
-	    html(html(
-		[head(title('Howdy')),
-		 body([h1('A Simple Web Page'),
-		      p('With some text')])])),
-	    TokenizedHtml,
-	    []),
-        format('Content-type: text/html~n~n'),
+	  html([
+			head(title('Howdy')),
+		 	body([
+				h1('A Simple Web Page'),
+				p('With some text')
+			])
+		]),
+	TokenizedHtml,
+	[]),
+	format('Content-type: text/html~n~n'),
 	print_html(TokenizedHtml).
