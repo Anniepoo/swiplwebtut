@@ -248,10 +248,10 @@ Exercise (harder):
 serve up a small png image just using format calls
 
 Exercise:
-Add the Server: header to the response, using +version/1+ to get the SWI-Prolog version of your SWI-Prolog install.
+Add the **Server:** header to the response, using +current_prolog_flag(version, V)+ to get the SWI-Prolog version of your SWI-Prolog install.
 The header should look something like 
 
-	Server: Apache/2.4.1 (Unix)
+	Server: SWI-Prolog/8.0.3
 ****
 
 Abstract Paths
