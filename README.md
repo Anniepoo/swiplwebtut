@@ -1,8 +1,5 @@
 swiplwebtut
 ===========
 
-A tutorial for the swipl web framework
+A [tutorial for the swipl web framework](web.adoc)
 
-This tutorial is available online at
-
-http://www.pathwayslms.com/swipltuts/html/index.html
